@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -119,22 +118,21 @@ class SwipingCardsState internal constructor(
 
     internal val cardAnimStates = mutableMapOf<Int, CardAnimState>()
 
-    // Derived states
-    val dragProgress by derivedStateOf {
-        if (containerWidthPx > 0f)
+    val dragProgress: Float
+        get() = if (containerWidthPx > 0f) {
             (dragOffsetX.value / (containerWidthPx * 0.5f)).coerceIn(-1f, 1f)
-        else 0f
-    }
+        } else {
+            0f
+        }
 
-    internal val stackRotationY by derivedStateOf { dragProgress * maxRotationY }
+    internal val stackRotationY: Float
+        get() = dragProgress * maxRotationY
 
-    internal val backgroundRepulsionX by derivedStateOf {
-        -dragOffsetX.value * BACKGROUND_HORIZONTAL_REPULSION_FACTOR
-    }
+    internal val backgroundRepulsionX: Float
+        get() = -dragOffsetX.value * BACKGROUND_HORIZONTAL_REPULSION_FACTOR
 
-    internal val backgroundRepulsionY by derivedStateOf {
-        -dragOffsetY.value * BACKGROUND_VERTICAL_REPULSION_FACTOR
-    }
+    internal val backgroundRepulsionY: Float
+        get() = -dragOffsetY.value * BACKGROUND_VERTICAL_REPULSION_FACTOR
 
     internal val visibleCount: Int
         get() = minOf(indexOrder.size, COMPOSED_CARDS)
