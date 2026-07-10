@@ -9,13 +9,15 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+
+// NOTE: The key-orthogonal helpers formerly here (StackPositionConfig, stackPositionConfig,
+// idleTranslationXPx, bottomAlignmentOffsetY, CardAnimState) moved verbatim to DeckState.kt as
+// part of porting this machinery to the key-addressed DeckState holder. They are referenced
+// unqualified below and resolve to the DeckState.kt copies (identical signatures, same package).
+// This class itself remains until SwipingCards.kt is re-pointed at DeckState in a later task.
 
 internal const val COMPOSED_CARDS = 4
 private const val BACKGROUND_VERTICAL_REPULSION_FACTOR = 0.35f
@@ -25,72 +27,6 @@ private const val SETTLE_SPRING_DAMPING = 0.75f
 private const val SETTLE_SPRING_STIFFNESS = 300f
 private const val PROMOTE_SPRING_DAMPING = 0.7f
 private const val PROMOTE_SPRING_STIFFNESS = 80f
-
-// All visual properties for a card at a given stack position — single source of truth
-internal data class StackPositionConfig(
-    val scale: Float,
-    val rotationZ: Float,
-    val alpha: Float,
-    val repulsionFactor: Float,
-    val elevation: Dp,
-)
-
-internal fun stackPositionConfig(position: Int): StackPositionConfig = when (position) {
-    0 -> StackPositionConfig(scale = 1.0f, rotationZ = 0f, alpha = 1f, repulsionFactor = 0f, elevation = 12.dp)
-    1 -> StackPositionConfig(scale = 0.92f, rotationZ = -6f, alpha = 1f, repulsionFactor = 1.0f, elevation = 8.dp)
-    2 -> StackPositionConfig(scale = 0.84f, rotationZ = 4f, alpha = 1f, repulsionFactor = 0.6f, elevation = 4.dp)
-    3 -> StackPositionConfig(scale = 0.76f, rotationZ = -2f, alpha = 1f, repulsionFactor = 0.3f, elevation = 2.dp)
-    else -> StackPositionConfig(scale = 0.7f, rotationZ = 2f, alpha = 0.8f, repulsionFactor = 0.3f, elevation = 2.dp)
-}
-
-// Compute X so background card's bottom corner aligns with card 0's bottom corner.
-// Odd positions (1, 3) align left-bottom; even positions (2) align right-bottom.
-internal fun idleTranslationXPx(
-    position: Int,
-    scale: Float,
-    rotationZDeg: Float,
-    cardWidthPx: Float,
-): Float {
-    if (position == 0) return 0f
-    val rotRad = Math.toRadians(rotationZDeg.toDouble())
-    val cosR = cos(rotRad).toFloat()
-    val halfW = cardWidthPx / 2f
-    return if (position % 2 == 1) {
-        // Left-bottom corner of scaled+rotated card → card 0's left-bottom
-        -halfW + (halfW * scale) * cosR
-    } else {
-        // Right-bottom corner of scaled+rotated card → card 0's right-bottom
-        halfW - (halfW * scale) * cosR
-    }
-}
-
-/**
- * Compute the Y offset needed to align a scaled+rotated card's bottom edge
- * with the unrotated top card's bottom edge. A rotated card has a corner
- * that dips below the unrotated bottom — this accounts for that.
- */
-internal fun bottomAlignmentOffsetY(
-    scale: Float,
-    rotationZRad: Double,
-    cardWidthPx: Float,
-    cardHeightPx: Float,
-): Float {
-    val bottomExtent =
-        (cardWidthPx * scale / 2f) * sin(rotationZRad).toFloat() +
-        (cardHeightPx * scale / 2f) * cos(rotationZRad).toFloat()
-    val topCardBottom = cardHeightPx / 2f
-    return topCardBottom - bottomExtent
-}
-
-// Per-card animated properties — each item tracks its own visual state
-@Stable
-internal class CardAnimState(config: StackPositionConfig, initialXPx: Float) {
-    val scale = Animatable(config.scale)
-    val rotationZ = Animatable(config.rotationZ)
-    val translationX = Animatable(initialXPx)
-    val translationY = Animatable(0f)
-    val alpha = Animatable(config.alpha)
-}
 
 @Stable
 class SwipingCardsState internal constructor(
