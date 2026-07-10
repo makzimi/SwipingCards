@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
@@ -167,6 +169,12 @@ private fun <T> SwipingCardsScope.SwipingCard(
     val positionConfig = stackPositionConfig(stackPosition)
     val card = cardsByKey.getValue(cardKey)
 
+    // The drag gesture below is a long-lived pointerInput(Unit) that must never
+    // restart, so its closures cannot capture cardsByKey/onSwipe by value — they'd
+    // go stale after an external cards update. rememberUpdatedState keeps them fresh.
+    val latestCardsByKey = rememberUpdatedState(cardsByKey)
+    val latestOnSwipe = rememberUpdatedState(onSwipe)
+
     Box(
         modifier = modifier
             .size(cardWidth, cardHeight)
@@ -194,11 +202,11 @@ private fun <T> SwipingCardsScope.SwipingCard(
             }
             .conditionalDragGesture(
                 deck = deck,
-                cardsByKey = cardsByKey,
+                cardsByKey = latestCardsByKey,
                 hapticFeedback = hapticFeedback,
                 coroutineScope = coroutineScope,
                 needToDrag = { stackPosition == 0 },
-                onSwipe = onSwipe,
+                onSwipe = latestOnSwipe,
             ),
     ) {
         cardContent(card)
@@ -207,11 +215,11 @@ private fun <T> SwipingCardsScope.SwipingCard(
 
 private fun <T> Modifier.conditionalDragGesture(
     deck: DeckState,
-    cardsByKey: Map<Any, T>,
+    cardsByKey: State<Map<Any, T>>,
     hapticFeedback: HapticFeedback,
     coroutineScope: CoroutineScope,
     needToDrag: () -> Boolean,
-    onSwipe: (SwipeResult<T>) -> Unit,
+    onSwipe: State<(SwipeResult<T>) -> Unit>,
 ): Modifier = then(
     if (needToDrag()) {
         Modifier.cardDragGesture(
@@ -228,10 +236,10 @@ private fun <T> Modifier.conditionalDragGesture(
 
 private fun <T> Modifier.cardDragGesture(
     deck: DeckState,
-    cardsByKey: Map<Any, T>,
+    cardsByKey: State<Map<Any, T>>,
     hapticFeedback: HapticFeedback,
     coroutineScope: CoroutineScope,
-    onSwipe: (SwipeResult<T>) -> Unit,
+    onSwipe: State<(SwipeResult<T>) -> Unit>,
 ): Modifier = pointerInput(Unit) {
     val velocityTracker = VelocityTracker()
     var gestureBlocked = false
@@ -277,7 +285,7 @@ private fun <T> Modifier.cardDragGesture(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 deck.isAnimating = true
                 val dismissedKey = deck.internalOrder.first()
-                val swipedCard = cardsByKey.getValue(dismissedKey)
+                val swipedCard = cardsByKey.value.getValue(dismissedKey)
                 // Derive direction from the drag vector, falling back to fling velocity
                 // when the release happened with a near-zero offset.
                 val useVelocity = abs(endX) < 1f && abs(endY) < 1f
@@ -291,8 +299,8 @@ private fun <T> Modifier.cardDragGesture(
                         dismissedKey = dismissedKey,
                         coroutineScope = coroutineScope,
                         onGestureUnlock = {
-                            val resultingOrder = deck.internalOrder.map { cardsByKey.getValue(it) }
-                            onSwipe(
+                            val resultingOrder = deck.internalOrder.map { cardsByKey.value.getValue(it) }
+                            onSwipe.value(
                                 SwipeResult(
                                     card = swipedCard,
                                     key = dismissedKey,

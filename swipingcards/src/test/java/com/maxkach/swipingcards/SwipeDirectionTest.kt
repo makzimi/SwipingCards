@@ -22,4 +22,9 @@ class SwipeDirectionTest {
         assertEquals(SwipeDirection.Right, resolveSwipeDirection(dx = 50f, dy = 50f))
         assertEquals(SwipeDirection.Left, resolveSwipeDirection(dx = -50f, dy = -50f))
     }
+
+    @Test
+    fun zeroVectorResolvesToRight() {
+        assertEquals(SwipeDirection.Right, resolveSwipeDirection(dx = 0f, dy = 0f))
+    }
 }

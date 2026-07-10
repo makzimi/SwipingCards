@@ -23,7 +23,9 @@ data class SwipeResult<T>(
 
 /**
  * Resolves a swipe direction from a movement vector. The larger-magnitude axis wins;
- * horizontal wins ties. Screen coordinates: positive [dy] points downward.
+ * horizontal wins ties. Screen coordinates: positive [dy] points downward. A zero
+ * vector (or a horizontal tie, `|dx| == |dy|`) resolves to a horizontal direction —
+ * [SwipeDirection.Right] when `dx >= 0`.
  */
 internal fun resolveSwipeDirection(dx: Float, dy: Float): SwipeDirection =
     if (abs(dx) >= abs(dy)) {

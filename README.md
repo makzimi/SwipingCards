@@ -37,7 +37,14 @@ The deck is an infinite circular queue of any size: swiping the front card sends
 to the back. Supply your list via `cards` and a stable `key`; the component keeps an
 optimistic internal order and reconciles it against your list without restarting
 in-flight animations. The deck fills the size you give it through `modifier` — no card
-dimensions are hardcoded.
+dimensions are hardcoded. The 3D tilt and swipe sensitivity are also tunable via the
+optional `maxRotationY` (default `38f` degrees) and `swipeThresholdFraction` (default
+`0.20f`) parameters.
+
+**Reconciliation note:** external updates should preserve the relative position of
+surviving cards. Removing/adding cards and confirming optimistic swipes reconcile
+smoothly; reordering cards that remain in the deck to new stack positions is not
+animated.
 
 ### Migrating from the index-based API
 
