@@ -1,7 +1,9 @@
-# Example gallery — assets to generate
+# Example gallery — image generation prompts
 
-Checklist for the generated artwork the Epic 2 example gallery uses. Bank cards are
-code-drawn and need no files.
+Copy-paste prompts for the generated artwork the Epic 2 example gallery uses. Each
+image below has a **complete, standalone prompt** — just copy the block into Imagen,
+set the **aspect ratio** noted above it, and generate. Bank cards are code-drawn and
+need no images.
 
 ## Where the files go
 
@@ -12,48 +14,83 @@ sample/src/main/res/drawable/
 File names must be **exactly** as listed (lowercase + underscores — Android rejects
 other characters), format **`.webp`**. After the files are in place, the roster code
 is swapped one line per entry from `Artwork.Placeholder(...)` to
-`Artwork.Image(R.drawable.<name>, "<description>")` in `dating/DatingProfile.kt` and
-`dnd/DndCard.kt` — no layout or API change.
+`Artwork.Image(R.drawable.<name>, "<description>")` — no layout or API change.
 
-## Rules for every image (pass these to the image model)
+## What is shared vs. different
 
-- No baked-in text, no logos, no watermarks.
-- No card frame / border / UI — the app draws the frames. Dating is full-bleed;
-  D&D is a full-square illustration placed inside an in-app frame.
-- Match the stated aspect ratio exactly.
-- Deliver `.webp` (if the tool only exports PNG, convert afterward).
-
----
-
-## Dating — full-bleed cartoon portraits
-
-- **Aspect ratio:** `2:3` (portrait), e.g. 1024×1536
-- **Prompt template:** Flat-color cartoon character portrait, friendly modern
-  illustration style, single person, waist-up, looking at viewer, soft gradient
-  studio background, portrait 2:3 aspect ratio 1024×1536, full-bleed, no text, no
-  border, no logo. Character: **[DESCRIPTION]**.
-
-| Done | File | Character | `[DESCRIPTION]` |
-| --- | --- | --- | --- |
-| [ ] | `dating_mira.webp` | Mira (botanist) | cheerful botanist, curly hair, holding a small potted plant, warm greens |
-| [ ] | `dating_rowan.webp` | Rowan (climber) | climber in a beanie, freckles, easy grin, terracotta/orange palette |
-| [ ] | `dating_kai.webp` | Kai (jazz drummer) | jazz drummer, undercut, headphones round neck, cool indigo night palette |
-| [ ] | `dating_sol.webp` | Sol (ceramicist) | ceramicist in an apron, calm smile, holding a teacup, sandy neutral palette |
-| [ ] | `dating_nova.webp` | Nova (indie dev) | indie game dev, glasses, hoodie, playful expression, violet/magenta palette |
+- **Dating** images share one style (flat cartoon portrait, 2:3) — only the character
+  differs. **D&D** images share one style (painterly fantasy card art, 1:1) — only the
+  subject differs. The shared style is already written into every prompt below, so each
+  block is self-contained.
+- **Every image, both sets:** no baked-in text, no words, no logo, no watermark, no
+  card frame/border/UI (the app draws frames). Deliver `.webp` (if Imagen exports PNG,
+  convert afterward).
 
 ---
 
-## D&D — square framed illustrations
+# Dating — cartoon portraits
 
-- **Aspect ratio:** `1:1` (square), e.g. 1024×1024
-- **Prompt template:** Fantasy trading-card illustration, painterly digital art,
-  dramatic lighting, square 1:1 aspect ratio 1024×1024, centered subject filling the
-  frame, no text, no card frame, no border, no UI. Subject: **[DESCRIPTION]**.
+**Aspect ratio for all 5: `2:3` (portrait).**
 
-| Done | File | Character | `[DESCRIPTION]` |
-| --- | --- | --- | --- |
-| [ ] | `dnd_rogue.webp` | Lila Underbough — Halfling Rogue | a halfling rogue in a dark leather hood, twin daggers, sly grin, torch-lit |
-| [ ] | `dnd_warlock.webp` | Kaelen Ashborn — Tiefling Warlock | a tiefling warlock, curling horns, glowing eldritch violet energy in hand |
-| [ ] | `dnd_barbarian.webp` | Gruk the Unbroken — Half-Orc Barbarian | a hulking half-orc barbarian mid-roar, greataxe, war paint, stormy sky |
-| [ ] | `dnd_ranger.webp` | Sylvara Nightbreeze — Elf Ranger | an elf ranger drawing a longbow in a misty forest, green cloak, hawk nearby |
-| [ ] | `dnd_fighter.webp` | Ser Aldric Vane — Human Fighter | a human knight in plate armor, longsword raised, banner behind, golden light |
+### 1. `dating_mira.webp` — ratio `2:3`
+```
+Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a cheerful young woman botanist with voluminous curly dark hair, wearing a cozy olive-green cardigan, gently cradling a small potted succulent, warm leafy green color palette. No text, no words, no border, no frame, no logo, no watermark.
+```
+
+### 2. `dating_rowan.webp` — ratio `2:3`
+```
+Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a friendly young man rock climber with light freckles and a relaxed easy grin, wearing a knit beanie and a rugged jacket, a little chalk dust on his hands, terracotta and burnt-orange color palette. No text, no words, no border, no frame, no logo, no watermark.
+```
+
+### 3. `dating_kai.webp` — ratio `2:3`
+```
+Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a cool young jazz drummer with a stylish undercut hairstyle, over-ear headphones resting around the neck, wearing a dark tee, casually holding a pair of drumsticks, deep indigo and midnight-blue night palette with subtle neon accents. No text, no words, no border, no frame, no logo, no watermark.
+```
+
+### 4. `dating_sol.webp` — ratio `2:3`
+```
+Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a calm ceramicist wearing a clay-smudged apron, hair tied back, softly smiling while holding a handmade teacup, sandy beige and warm neutral earthy color palette. No text, no words, no border, no frame, no logo, no watermark.
+```
+
+### 5. `dating_nova.webp` — ratio `2:3`
+```
+Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a playful indie game developer with round glasses and a colorful hoodie, mischievous smile, faint pixel and synth motifs floating softly in the background, violet and magenta color palette. No text, no words, no border, no frame, no logo, no watermark.
+```
+
+---
+
+# D&D — fantasy card illustrations
+
+**Aspect ratio for all 5: `1:1` (square).**
+
+### 6. `dnd_rogue.webp` — ratio `1:1` — Lila Underbough, Halfling Rogue
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a halfling rogue — a small nimble humanoid with a sly confident grin, wearing a dark hooded leather outfit, wielding two gleaming daggers in a ready crouch, a torch-lit stone dungeon corridor behind her with moody warm firelight. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### 7. `dnd_warlock.webp` — ratio `1:1` — Kaelen Ashborn, Tiefling Warlock
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a tiefling warlock — a humanoid with crimson skin and long curling horns, glowing violet eldritch energy swirling around one raised hand, wearing ornate dark robes, a faintly glowing arcane sigil behind, mysterious purple lighting. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### 8. `dnd_barbarian.webp` — ratio `1:1` — Gruk the Unbroken, Half-Orc Barbarian
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a half-orc barbarian — a massive muscular green-skinned warrior with tusks, mid-roar in a battle cry, hoisting a huge two-handed greataxe overhead, tribal war paint across his face and arms, a stormy dark sky with dramatic lightning behind him. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### 9. `dnd_ranger.webp` — ratio `1:1` — Sylvara Nightbreeze, Elf Ranger
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: an elf ranger — a graceful pointed-eared archer drawing a longbow with an arrow nocked, wearing a hooded green forest cloak, a hawk in flight nearby, a misty sunlit ancient forest background with cool green light. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### 10. `dnd_fighter.webp` — ratio `1:1` — Ser Aldric Vane, Human Fighter
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a human knight fighter in polished plate armor, longsword raised confidently, a heraldic banner waving behind, standing resolute, warm golden heroic lighting on a battlefield at dawn. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+---
+
+## Progress
+
+Dating: [ ] mira  [ ] rowan  [ ] kai  [ ] sol  [ ] nova
+D&D:    [ ] rogue  [ ] warlock  [ ] barbarian  [ ] ranger  [ ] fighter
