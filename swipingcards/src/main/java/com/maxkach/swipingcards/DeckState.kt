@@ -5,6 +5,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
@@ -118,6 +119,14 @@ internal class DeckState {
 
     private val cardAnimStates = mutableMapOf<Any, CardAnimState>()
 
+    // Cards that have rotated out of the visible window and are animating their exit
+    // (sinking to the back + fading). Rendered as extra layers behind the stack until
+    // their exit animation finishes. A generation token per key lets a stale exit's
+    // cleanup no-op if the same card was reclaimed back into the visible window.
+    val exitingKeys = mutableStateListOf<Any>()
+    private val exitTokens = mutableMapOf<Any, Int>()
+    private var nextExitToken = 0
+
     val visibleCount: Int
         get() = DeckReconciler.visibleCount(internalOrder.size, maxVisibleCards)
 
@@ -144,6 +153,33 @@ internal class DeckState {
             CardAnimState(config, xPx)
         }
 
+    /** Animation state for a card currently rendered as an exiting layer, or null. */
+    fun animStateOf(key: Any): CardAnimState? = cardAnimStates[key]
+
+    // Marks [key] as exiting and returns a generation token for its cleanup to match.
+    private fun startExit(key: Any): Int {
+        val token = ++nextExitToken
+        exitTokens[key] = token
+        if (key !in exitingKeys) exitingKeys.add(key)
+        return token
+    }
+
+    // Cancels an in-progress exit for [key] (it is re-entering the visible window),
+    // so the running exit's cleanup will no-op and its anim state is reused.
+    private fun reclaimIfExiting(key: Any) {
+        if (exitTokens.remove(key) != null) exitingKeys.remove(key)
+    }
+
+    // Drops the exiting layer once its animation settles — unless a newer exit or a
+    // reclaim has already superseded this generation.
+    private fun endExit(key: Any, token: Int) {
+        if (exitTokens[key] == token) {
+            exitTokens.remove(key)
+            exitingKeys.remove(key)
+            cardAnimStates.remove(key)
+        }
+    }
+
     /**
      * Reconciles the incoming external key order into the internal order. Equal orders
      * are a confirmation and leave in-flight animations untouched; a genuinely different
@@ -152,7 +188,11 @@ internal class DeckState {
     fun reconcile(externalKeys: List<Any>) {
         val result = DeckReconciler.reconcile(internalOrder, externalKeys)
         if (result.removed.isNotEmpty()) {
-            result.removed.forEach { cardAnimStates.remove(it) }
+            result.removed.forEach { key ->
+                cardAnimStates.remove(key)
+                exitTokens.remove(key)
+                exitingKeys.remove(key)
+            }
         }
         internalOrder = result.newOrder
     }
@@ -203,24 +243,69 @@ internal class DeckState {
         dragOffsetX.snapTo(0f)
         dragOffsetY.snapTo(0f)
 
-        // 5. Rotate the deck: front card to the back.
+        // 5. Rotate the deck: front card to the back. When there are more cards than
+        //    the visible window, the dismissed card leaves the window and must keep
+        //    animating as an "exiting" layer rather than being unmounted immediately.
+        val hasHiddenQueue = internalOrder.size > maxVisibleCards
         val newOrder = DeckReconciler.rotate(internalOrder)
+        val promoteCount = DeckReconciler.visibleCount(newOrder.size, maxVisibleCards)
+        val visibleKeys = newOrder.take(promoteCount)
+
+        // Any card re-entering the visible window cannot also be mid-exit — reclaim it
+        // so its (possibly fading) state is reused and the stale exit's cleanup no-ops.
+        visibleKeys.forEach(::reclaimIfExiting)
+
+        var exitToken = -1
+        if (hasHiddenQueue) {
+            exitToken = startExit(dismissedKey)
+            // Seed the newly revealed rear card one slot deeper so it rises into place.
+            val enteringKey = visibleKeys.last()
+            if (cardAnimStates[enteringKey] == null) {
+                val deep = stackPositionConfig(promoteCount)
+                val deepX = idleTranslationXPx(promoteCount, deep.scale, deep.rotationZ, cardWidthPx)
+                cardAnimStates[enteringKey] = CardAnimState(deep, deepX)
+            }
+        }
+
         internalOrder = newOrder
 
         // 6. Unlock gestures + emit the committed-swipe callback (exactly once).
         onGestureUnlock()
 
-        // 7. Animate all visible cards (including the promoted top) to idle (non-blocking).
+        // 7. Animate everything to rest (non-blocking).
         val promoteSpring = spring<Float>(
             dampingRatio = PROMOTE_SPRING_DAMPING,
             stiffness = PROMOTE_SPRING_STIFFNESS,
         )
+
+        // The exiting card sinks toward the rear and fades — in its own scope, touching
+        // only its own animatables, so a rapid follow-up swipe can't cancel it. The
+        // finally clause always drops the layer, even if a reclaim supersedes it.
+        if (hasHiddenQueue) {
+            coroutineScope.launch {
+                try {
+                    val exitConfig = stackPositionConfig(promoteCount)
+                    val exitX = idleTranslationXPx(promoteCount, exitConfig.scale, exitConfig.rotationZ, cardWidthPx)
+                    coroutineScope {
+                        launch { dismissedState.scale.animateTo(exitConfig.scale, promoteSpring) }
+                        launch { dismissedState.rotationZ.animateTo(exitConfig.rotationZ, promoteSpring) }
+                        launch { dismissedState.translationX.animateTo(exitX, promoteSpring) }
+                        launch { dismissedState.translationY.animateTo(0f, promoteSpring) }
+                        launch { dismissedState.alpha.animateTo(0f, promoteSpring) }
+                    }
+                } finally {
+                    endExit(dismissedKey, exitToken)
+                }
+            }
+        }
+
+        // The visible window (and container rotation) promote to idle. Shared state here
+        // may be cancelled and restarted by the next swipe — that is expected.
         coroutineScope.launch {
             coroutineScope {
                 launch { residualRotationY.animateTo(0f, promoteSpring) }
 
-                val promoteCount = DeckReconciler.visibleCount(newOrder.size, maxVisibleCards)
-                for ((newPos, cardKey) in newOrder.take(promoteCount).withIndex()) {
+                for ((newPos, cardKey) in visibleKeys.withIndex()) {
                     val state = cardAnimStates[cardKey] ?: continue
                     val config = stackPositionConfig(newPos)
                     val targetXPx = idleTranslationXPx(newPos, config.scale, config.rotationZ, cardWidthPx)

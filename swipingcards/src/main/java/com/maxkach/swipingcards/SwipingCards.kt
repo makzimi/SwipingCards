@@ -135,6 +135,15 @@ private fun <T> SwipingCardsScope.RotationContainer(
             },
         contentAlignment = Alignment.Center,
     ) {
+        // Cards that have rotated out of the visible window but are still animating
+        // their exit — rendered behind the stack until they settle.
+        deck.exitingKeys.forEach { exitKey ->
+            val card = cardsByKey[exitKey] ?: return@forEach
+            key(exitKey) {
+                ExitingCard(deck = deck, cardKey = exitKey, card = card, cardContent = cardContent)
+            }
+        }
+
         for (i in (deck.visibleCount - 1) downTo 0) {
             val cardKey = deck.internalOrder[i]
 
@@ -150,6 +159,40 @@ private fun <T> SwipingCardsScope.RotationContainer(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun <T> SwipingCardsScope.ExitingCard(
+    deck: DeckState,
+    cardKey: Any,
+    card: T,
+    cardContent: @Composable (T) -> Unit,
+) {
+    val animState = deck.animStateOf(cardKey) ?: return
+
+    Box(
+        modifier = Modifier
+            .size(cardWidth, cardHeight)
+            .zIndex(-1f)
+            .graphicsLayer {
+                scaleX = animState.scale.value
+                scaleY = animState.scale.value
+                rotationZ = animState.rotationZ.value
+                this.alpha = animState.alpha.value
+
+                val bottomAlignY = bottomAlignmentOffsetY(
+                    scale = animState.scale.value,
+                    rotationZRad = abs(animState.rotationZ.value) * DEG_TO_RAD,
+                    cardWidthPx = cardWidth.toPx(),
+                    cardHeightPx = cardHeight.toPx(),
+                )
+
+                translationX = animState.translationX.value
+                translationY = bottomAlignY + animState.translationY.value
+            },
+    ) {
+        cardContent(card)
     }
 }
 
