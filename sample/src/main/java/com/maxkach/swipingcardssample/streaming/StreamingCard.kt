@@ -1,6 +1,7 @@
 package com.maxkach.swipingcardssample.streaming
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,14 @@ private val netflixRed = Color(0xFFE50914)
 @Composable
 fun StreamingCard(show: StreamingTitle, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(12.dp)
-    Box(modifier.fillMaxSize().clip(shape).background(Color.Black)) {
+    Box(
+        modifier
+            .fillMaxSize()
+            .clip(shape)
+            .background(Color.Black)
+            // Light hairline frame so dark posters don't blend into the black screen.
+            .border(1.5.dp, Color.White.copy(alpha = 0.3f), shape),
+    ) {
         ArtworkImage(show.artwork, Modifier.fillMaxSize())
         // Bottom scrim so the title, tags, and buttons stay legible over any poster.
         Box(
