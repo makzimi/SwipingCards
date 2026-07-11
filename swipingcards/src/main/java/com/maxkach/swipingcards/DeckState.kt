@@ -186,7 +186,8 @@ internal class DeckState {
      * order is adopted, and animation state for removed keys is pruned.
      */
     fun reconcile(externalKeys: List<Any>) {
-        val result = DeckReconciler.reconcile(internalOrder, externalKeys)
+        val previousOrder = internalOrder
+        val result = DeckReconciler.reconcile(previousOrder, externalKeys)
         if (result.removed.isNotEmpty()) {
             result.removed.forEach { key ->
                 cardAnimStates.remove(key)
@@ -195,6 +196,32 @@ internal class DeckState {
             }
         }
         internalOrder = result.newOrder
+
+        // A genuinely different order re-lays-out the deck. A same-order confirmation
+        // (newOrder == previousOrder) is skipped so an in-flight swipe animation is
+        // never reset.
+        if (result.newOrder != previousOrder) {
+            reseatAfterReorder(previousOrder)
+        }
+    }
+
+    // After an external reorder, drop stale per-card visual state for any visible card
+    // whose stack position changed; getOrCreateCardAnimState re-creates it at the new
+    // position (with the measured card width) during the following render. Cards that
+    // kept their position retain their state, so nothing resets unnecessarily.
+    private fun reseatAfterReorder(previousOrder: List<Any>) {
+        // An external reorder supersedes any in-progress exit animations.
+        if (exitingKeys.isNotEmpty()) {
+            exitingKeys.toList().forEach { cardAnimStates.remove(it) }
+            exitingKeys.clear()
+            exitTokens.clear()
+        }
+        val count = visibleCount
+        internalOrder.take(count).forEachIndexed { position, key ->
+            if (previousOrder.indexOf(key) != position) {
+                cardAnimStates.remove(key)
+            }
+        }
     }
 
     suspend fun settleBack() {

@@ -41,10 +41,10 @@ dimensions are hardcoded. The 3D tilt and swipe sensitivity are also tunable via
 optional `maxRotationY` (default `38f` degrees) and `swipeThresholdFraction` (default
 `0.20f`) parameters.
 
-**Reconciliation note:** external updates should preserve the relative position of
-surviving cards. Removing/adding cards and confirming optimistic swipes reconcile
-smoothly; reordering cards that remain in the deck to new stack positions is not
-animated.
+**Reconciliation note:** removing/adding cards and confirming an optimistic swipe
+reconcile smoothly without interrupting in-flight animations. When an external update
+reorders cards that stay in the deck, surviving cards are re-seated to their new stack
+positions immediately (without an animated transition).
 
 ### Migrating from the index-based API
 
