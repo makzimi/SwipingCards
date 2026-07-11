@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -37,13 +38,17 @@ fun rememberEventHistoryState(): EventHistoryState = remember { EventHistoryStat
 
 /** Secondary, muted list of the most recent swipe outcomes. */
 @Composable
-fun EventHistoryView(state: EventHistoryState, modifier: Modifier = Modifier) {
+fun EventHistoryView(
+    state: EventHistoryState,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
         if (state.entries.isEmpty()) {
             Text(
                 text = "Swipe a card to begin",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = color,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -52,8 +57,7 @@ fun EventHistoryView(state: EventHistoryState, modifier: Modifier = Modifier) {
                 Text(
                     text = entry,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = if (index == 0) 1f else 0.6f),
+                    color = color.copy(alpha = if (index == 0) 1f else 0.6f),
                     modifier = Modifier.padding(vertical = 2.dp),
                 )
             }

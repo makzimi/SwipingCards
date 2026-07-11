@@ -6,8 +6,13 @@ set the **aspect ratio** noted above it, and generate. Bank cards are code-drawn
 need no images.
 
 **Counts (deliberately different, to show the deck handles any size):** Dating = 5
-portraits · D&D = **10** square illustrations · Bank = 3 (code-drawn, no images). So
-there are **15 images total** to generate.
+portraits · D&D = **10** square illustrations · Streaming = 6 posters · Bank = 3
+(code-drawn, no images). So there are **21 images total** to generate.
+
+**Streaming note:** these are original, mood/genre-based poster illustrations that evoke
+each show — deliberately **no real actor likenesses, no real logos, no copied poster
+art**. The app renders each show's title and tags as text, so the poster only needs to
+capture the vibe.
 
 ## Where the files go
 
@@ -119,7 +124,46 @@ Fantasy trading-card creature illustration, painterly digital art, rich detail, 
 
 ---
 
+# Streaming — poster illustrations (6)
+
+**Aspect ratio for all 6: `2:3` (portrait movie-poster), e.g. 1024×1536.** Original
+mood/genre art only — **no real people, no logos, no copied posters** (the app draws
+the title + tags itself). Cinematic, evocative, full-bleed.
+
+### S1. `show_stranger_things.webp` — ratio `2:3`
+```
+Cinematic 1980s supernatural-horror movie poster, moody portrait 2:3 aspect ratio, full-bleed. A group of kids on bicycles in silhouette against an ominous dark pine forest, an eerie upside-down otherworldly sky glowing blood-red, retro small-town Americana, drifting fog, dramatic red-and-teal lighting, subtle film grain. No text, no words, no logo, no watermark, no recognizable real people.
+```
+
+### S2. `show_squid_game.webp` — ratio `2:3`
+```
+Cinematic survival-thriller movie poster, portrait 2:3 aspect ratio, full-bleed. Ranks of faceless figures in matching teal-green tracksuits standing inside a giant surreal maze of pastel pink and mint staircases, masked guards in pink jumpsuits with simple geometric black masks, ominous playground colors, harsh high-contrast lighting, unsettling tense mood. No text, no words, no logo, no watermark, no recognizable real people.
+```
+
+### S3. `show_the_crown.webp` — ratio `2:3`
+```
+Prestige historical royal-drama movie poster, portrait 2:3 aspect ratio, full-bleed. An elegant silhouette of a regal woman wearing an ornate jeweled crown, seated on a throne in a grand candlelit palace hall, rich golds and deep royal blues, oil-painting cinematic lighting, dignified and somber. No text, no words, no logo, no watermark, no recognizable real people.
+```
+
+### S4. `show_dark.webp` — ratio `2:3`
+```
+Bleak sci-fi mystery movie poster, portrait 2:3 aspect ratio, full-bleed. A lone hooded figure standing at the mouth of a dark dripping cave tunnel with an eerie glowing light, a nuclear power-plant silhouette and dense pine forest under a stormy sky, cold desaturated blue-green palette, ominous time-travel atmosphere. No text, no words, no logo, no watermark, no recognizable real people.
+```
+
+### S5. `show_mindhunter.webp` — ratio `2:3`
+```
+Moody 1970s crime-thriller movie poster, portrait 2:3 aspect ratio, full-bleed. A dim interrogation room with a single hanging lamp casting hard shadows over an empty metal chair, curling cigarette smoke, muted brown and amber tones, tense psychological noir atmosphere. No text, no words, no logo, no watermark, no recognizable real people.
+```
+
+### S6. `show_kpop_demon_hunters.webp` — ratio `2:3`
+```
+Vibrant animated action-fantasy movie poster, portrait 2:3 aspect ratio, full-bleed. Stylized K-pop idol warriors in glowing neon stage outfits wielding magical weapons against shadowy demons, dynamic heroic poses, explosive pink-purple-cyan neon lighting, energetic modern animation style. No text, no words, no logo, no watermark, no recognizable real people.
+```
+
+---
+
 ## Progress
 
-Dating (5): [ ] mira  [ ] rowan  [ ] kai  [ ] sol  [ ] nova
-D&D (10):   [ ] rogue  [ ] warlock  [ ] barbarian  [ ] ranger  [ ] fighter  [ ] cleric  [ ] bard  [ ] dragon  [ ] owlbear  [ ] troll
+Dating (5):    [ ] mira  [ ] rowan  [ ] kai  [ ] sol  [ ] nova
+D&D (10):      [ ] rogue  [ ] warlock  [ ] barbarian  [ ] ranger  [ ] fighter  [ ] cleric  [ ] bard  [ ] dragon  [ ] owlbear  [ ] troll
+Streaming (6): [ ] stranger_things  [ ] squid_game  [ ] the_crown  [ ] dark  [ ] mindhunter  [ ] kpop_demon_hunters

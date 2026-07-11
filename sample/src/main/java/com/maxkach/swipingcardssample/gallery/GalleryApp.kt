@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import com.maxkach.swipingcardssample.bank.BankExampleScreen
 import com.maxkach.swipingcardssample.dating.DatingExampleScreen
 import com.maxkach.swipingcardssample.dnd.DndExampleScreen
+import com.maxkach.swipingcardssample.streaming.StreamingExampleScreen
 
 /**
  * Hoisted-state navigator. `null` current = gallery. Each example screen owns its own
@@ -26,5 +27,6 @@ fun GalleryApp() {
         Destination.Dating -> DatingExampleScreen(onBack = back)
         Destination.Bank -> BankExampleScreen(onBack = back)
         Destination.Dnd -> DndExampleScreen(onBack = back)
+        Destination.Streaming -> StreamingExampleScreen(onBack = back)
     }
 }
