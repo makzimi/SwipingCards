@@ -1,19 +1,34 @@
 # SwipingCards
 
-A Jetpack Compose card stack widget with swipe-to-cycle gestures, 3D perspective rotation, and spring-based animations.
+A Jetpack Compose card-stack widget with swipe-to-cycle gestures, 3D perspective rotation, and spring-based animations.
 
 ![SwipingCards-only-1](https://github.com/user-attachments/assets/17aa8af7-9f30-4a50-b03f-71967a675908)
 
 ## Features
 
 - **Swipe to cycle** — swipe the top card away and it goes to the back of the stack (like swipe-to-dismiss, but nothing is lost)
+- **Infinite deck of any size** — an arbitrary-length circular queue; the deck never runs out
+- **Generic and stateless** — driven by your own `List<T>` and a stable `key`; no card dimensions are hardcoded
 - **3D rotation** — cards tilt in perspective as you drag
-- **Stacked layout** — up to 4 cards visible with scale, rotation, and elevation
+- **Stacked layout** — up to `maxVisibleCards` visible with scale, rotation, and elevation, plus a hidden queue that cycles in behind them
 - **Background repulsion** — background cards push away as you drag the top one
 - **Spring animations** — smooth settle-back and card promotion
 - **Haptic feedback** — vibrates on threshold and on swipe
-- **Fling support** — fast swipes work too
-- **Customizable** — rotation, threshold, and card content are all yours
+- **Fling support** — fast swipes commit too
+- **4-way swipe result** — every committed swipe reports its direction (Left / Right / Up / Down)
+
+## Getting started
+
+SwipingCards isn't published to a Maven repository yet. Consume it as a local Gradle
+module: include `:swipingcards` in your `settings.gradle.kts` and add it to your app:
+
+```kotlin
+dependencies {
+    implementation(project(":swipingcards"))
+}
+```
+
+Requires Android `minSdk 33` and Jetpack Compose.
 
 ## Usage
 
@@ -23,7 +38,7 @@ SwipingCards(
     key = { it.id },
     modifier = Modifier
         .fillMaxWidth(0.8f)
-        .aspectRatio(3f / 4f),
+        .aspectRatio(2f / 3f),
     maxVisibleCards = 4,
     onSwipe = { result ->
         // result.card, result.key, result.direction, result.resultingOrder
@@ -33,29 +48,78 @@ SwipingCards(
 }
 ```
 
-The deck is an infinite circular queue of any size: swiping the front card sends it
-to the back. Supply your list via `cards` and a stable `key`; the component keeps an
-optimistic internal order and reconciles it against your list without restarting
-in-flight animations. The deck fills the size you give it through `modifier` — no card
-dimensions are hardcoded. The 3D tilt and swipe sensitivity are also tunable via the
-optional `maxRotationY` (default `38f` degrees) and `swipeThresholdFraction` (default
-`0.20f`) parameters.
+That's the whole API: give it your `cards`, a `key`, a size (via `modifier`), and a
+composable to render one card. Everything else — the gestures, the stack, the
+animations — is handled for you.
 
-**Reconciliation note:** removing/adding cards and confirming an optimistic swipe
-reconcile smoothly without interrupting in-flight animations. When an external update
-reorders cards that stay in the deck, surviving cards are re-seated to their new stack
-positions immediately (without an animated transition).
+## How it works
 
-### Migrating from the index-based API
+**Infinite circular deck.** The cards form a circular queue. Swiping the front card
+sends it to the back, so the deck cycles forever and nothing is ever lost. When there
+are more cards than `maxVisibleCards`, the extra cards wait in a hidden queue and
+animate in from behind as the front cards leave.
 
-The previous `rememberSwipingCardsState(itemCount = …)` + `SwipingCards(state, …)` API
-has been replaced by the generic list/key API above:
+**External list, reconciled by key.** You own the data. SwipingCards keeps an
+*optimistic* internal order and reconciles it against your `cards` list by stable
+`key`:
 
-- Pass your `cards` list and a `key` selector instead of an item count.
-- `cardContent` and `onSwipe` receive the card (`T`) instead of an integer index —
-  `onSwipe` now delivers a `SwipeResult<T>` (`card`, `key`, `direction`, `resultingOrder`).
-- Size the deck yourself via `Modifier` (e.g. `.aspectRatio(3f / 4f)`); the old fixed
-  75%-width / 4:3 sizing is gone.
+- Committing a swipe is optimistic — the internal order rotates immediately, and a
+  matching update from your list is treated as a confirmation, so in-flight animations
+  are never restarted.
+- Adding or removing cards reconciles smoothly without interrupting animations.
+- When an external update reorders cards that stay in the deck, surviving cards are
+  re-seated to their new stack positions immediately (no animated transition).
+
+Keys must be **stable and unique** within the list; the deck de-duplicates against them.
+
+**You control the size.** The deck fills whatever bounds you give it through
+`modifier` — no dimensions are baked in. Set an aspect ratio (e.g.
+`.aspectRatio(2f / 3f)` for a tall poster, `.aspectRatio(1.586f)` for a wide card) and
+each card fills the deck box.
+
+## API reference
+
+`@Composable fun <T> SwipingCards(...)`
+
+| Parameter | Default | What it does |
+| --- | --- | --- |
+| `cards: List<T>` | — | Your current list of cards. May be empty. |
+| `key: (T) -> Any` | — | Stable, unique identity for each card. |
+| `modifier: Modifier` | `Modifier` | Sizes the deck (e.g. `fillMaxWidth(0.8f).aspectRatio(2f/3f)`). |
+| `maxVisibleCards: Int` | `4` | Max cards rendered at once (must be ≥ 1). |
+| `maxRotationY: Float` | `38f` | Degrees of 3D tilt at full drag. |
+| `swipeThresholdFraction: Float` | `0.20f` | Fraction of the deck width the drag must cross to commit. |
+| `onSwipe: (SwipeResult<T>) -> Unit` | `{}` | Called exactly once when a swipe commits. |
+| `cardContent: @Composable (T) -> Unit` | — | Renders a single card. |
+
+Every committed swipe delivers a `SwipeResult<T>`:
+
+```kotlin
+data class SwipeResult<T>(
+    val card: T,                 // the card that was swiped
+    val key: Any,                // its stable key
+    val direction: SwipeDirection, // Left, Right, Up, or Down
+    val resultingOrder: List<T>, // the deck's order after the swipe
+)
+
+enum class SwipeDirection { Left, Right, Up, Down }
+```
+
+## Example gallery
+
+The `:sample` app is a gallery that drives the *same* `SwipingCards` component through
+four very different demos — proof that one deck handles different dimensions, content,
+actions, and card counts. Each demo feeds a small event history from its swipe callback.
+
+| Demo | Card shape | Deck size | Content |
+| --- | --- | --- | --- |
+| **Dating** | Tall 2:3 portrait | 5 cards | Full-bleed character art, name, tagline, interest chips (pass / like) |
+| **Bank cards** | Wide 1.586:1 landscape | 3 cards | Code-drawn gradient card with a chip and masked number (skip / select) |
+| **D&D** | Near-square 4:5 | 10 cards | Ornate "printed card" — framed art, stat block (reject / recruit) |
+| **Streaming** | 2:3 poster on black | 6 cards | Netflix-style poster with Play / My List buttons and badges |
+
+Run it with `./gradlew :sample:installDebug` (or open the project and launch the
+`sample` app).
 
 ## License
 
