@@ -2,7 +2,7 @@
 
 A Jetpack Compose card-stack widget with swipe-to-cycle gestures, 3D perspective rotation, and spring-based animations.
 
-![SwipingCards-only-1](https://github.com/user-attachments/assets/17aa8af7-9f30-4a50-b03f-71967a675908)
+https://github.com/user-attachments/assets/5f20b261-ac51-4bd1-acd1-f8612707c9d6
 
 ## Features
 
