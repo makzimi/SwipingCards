@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -75,15 +76,24 @@ fun DndCardView(card: DndCard, modifier: Modifier = Modifier) {
             .border(3.dp, ink.copy(alpha = 0.4f), shape)
             .padding(10.dp),
     ) {
-        // Framed square art window — different hierarchy from the full-bleed dating card.
+        // Framed square art window — takes the leftover space above the stat
+        // block and stays square by keying off the available height, so the
+        // text/stat/hints below always fit (no clipping on shorter cards).
         Box(
             Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(10.dp))
-                .border(2.dp, ink.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
         ) {
-            ArtworkImage(card.artwork, Modifier.fillMaxSize())
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(2.dp, ink.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+            ) {
+                ArtworkImage(card.artwork, Modifier.fillMaxSize())
+            }
         }
         Spacer(Modifier.padding(top = 8.dp))
         Text(card.name, color = ink, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -98,7 +108,6 @@ fun DndCardView(card: DndCard, modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.padding(top = 6.dp))
         Text(card.flavor, color = ink.copy(alpha = 0.7f), fontSize = 11.sp)
-        Spacer(Modifier.weight(1f))
         ActionHints(negative = "Reject", positive = "Recruit", contentColor = ink)
     }
 }
