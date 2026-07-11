@@ -33,7 +33,7 @@ fun StreamingExampleScreen(onBack: () -> Unit) {
                 key = { it.title },
                 modifier = Modifier.fillMaxWidth(0.86f).aspectRatio(2f / 3f),
                 onSwipe = { result ->
-                    history.record(streamingEventLabel(result.direction, result.card.title))
+                    history.record(streamingEventLabel(result.direction))
                 },
             ) { show -> StreamingCard(show) }
         }

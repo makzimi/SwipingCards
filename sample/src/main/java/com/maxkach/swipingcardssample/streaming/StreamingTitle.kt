@@ -3,7 +3,6 @@ package com.maxkach.swipingcardssample.streaming
 import com.maxkach.swipingcards.SwipeDirection
 import com.maxkach.swipingcardssample.R
 import com.maxkach.swipingcardssample.common.Artwork
-import com.maxkach.swipingcardssample.common.isPositiveSwipe
 
 /**
  * A streaming title for the Netflix-style demo. [genres] renders as a dot-separated
@@ -34,5 +33,9 @@ val streamingTitles: List<StreamingTitle> = listOf(
         "NEW", Artwork.Image(R.drawable.show_kpop_demon_hunters, "Poster art for KPop Demon Hunters")),
 )
 
-fun streamingEventLabel(direction: SwipeDirection, title: String): String =
-    if (isPositiveSwipe(direction)) "Added $title to My List" else "Skipped $title"
+fun streamingEventLabel(direction: SwipeDirection): String = "Swiped " + when (direction) {
+    SwipeDirection.Left -> "left"
+    SwipeDirection.Right -> "right"
+    SwipeDirection.Up -> "up"
+    SwipeDirection.Down -> "down"
+}
