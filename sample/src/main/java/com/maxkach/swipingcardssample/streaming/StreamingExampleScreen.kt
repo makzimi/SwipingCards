@@ -41,6 +41,7 @@ fun StreamingExampleScreen(onBack: () -> Unit) {
             history,
             Modifier.padding(bottom = 16.dp),
             color = Color.White.copy(alpha = 0.7f),
+            emptyText = "Swipe cards to select a show",
         )
     }
 }

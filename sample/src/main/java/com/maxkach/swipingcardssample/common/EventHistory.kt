@@ -42,11 +42,12 @@ fun EventHistoryView(
     state: EventHistoryState,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    emptyText: String = "Swipe a card to begin",
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
         if (state.entries.isEmpty()) {
             Text(
-                text = "Swipe a card to begin",
+                text = emptyText,
                 style = MaterialTheme.typography.bodySmall,
                 color = color,
                 textAlign = TextAlign.Center,
