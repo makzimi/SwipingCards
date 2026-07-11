@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxkach.swipingcards.SwipeDirection
+import com.maxkach.swipingcardssample.R
 import com.maxkach.swipingcardssample.common.ActionHints
 import com.maxkach.swipingcardssample.common.Artwork
 import com.maxkach.swipingcardssample.common.ArtworkImage
@@ -44,34 +45,40 @@ data class DndCard(
 private val parchment = Color(0xFFEFE3C8)
 private val ink = Color(0xFF2B2118)
 
-private fun art(seed: Long, initials: String, name: String) =
-    Artwork.Placeholder(Color(seed), initials, "Illustration of $name")
-
 // A deliberately large roster (10) so the deck shows a deep hidden queue cycling
-// through, not just the infinite loop. Swap each `artwork` to
-// Artwork.Image(R.drawable.dnd_<slug>, "Illustration of <Name>") once the generated
-// 1:1 .webp files land in res/drawable/ (slugs match the filenames in the comments).
+// through, not just the infinite loop. Artwork is bundled as 1:1 .webp in
+// res/drawable/ (dnd_<slug>).
 val dndCards: List<DndCard> = listOf(
     DndCard("Lila Underbough", "Halfling Rogue", 22, 15, "3", 9, 17,
-        "Never met a lock she liked.", art(0xFF7A5C3E, "L", "Lila Underbough")), // dnd_rogue
+        "Never met a lock she liked.",
+        Artwork.Image(R.drawable.dnd_rogue, "Illustration of Lila Underbough, a Halfling Rogue")),
     DndCard("Kaelen Ashborn", "Tiefling Warlock", 27, 12, "4", 10, 14,
-        "Made a deal she intends to break.", art(0xFF6B2D8C, "K", "Kaelen Ashborn")), // dnd_warlock
+        "Made a deal she intends to break.",
+        Artwork.Image(R.drawable.dnd_warlock, "Illustration of Kaelen Ashborn, a Tiefling Warlock")),
     DndCard("Gruk the Unbroken", "Half-Orc Barbarian", 45, 13, "5", 18, 12,
-        "Anger is a renewable resource.", art(0xFF3E6B2D, "G", "Gruk the Unbroken")), // dnd_barbarian
+        "Anger is a renewable resource.",
+        Artwork.Image(R.drawable.dnd_barbarian, "Illustration of Gruk the Unbroken, a Half-Orc Barbarian")),
     DndCard("Sylvara Nightbreeze", "Elf Ranger", 30, 14, "4", 12, 16,
-        "Two arrows already in the air.", art(0xFF2D5C6B, "S", "Sylvara Nightbreeze")), // dnd_ranger
+        "Two arrows already in the air.",
+        Artwork.Image(R.drawable.dnd_ranger, "Illustration of Sylvara Nightbreeze, an Elf Ranger")),
     DndCard("Ser Aldric Vane", "Human Fighter", 38, 18, "5", 16, 11,
-        "Holds the line, every time.", art(0xFFB5952F, "A", "Ser Aldric Vane")), // dnd_fighter
+        "Holds the line, every time.",
+        Artwork.Image(R.drawable.dnd_fighter, "Illustration of Ser Aldric Vane, a Human Fighter")),
     DndCard("Brother Halden", "Dwarf Cleric", 34, 18, "4", 14, 10,
-        "Heals hard, hits harder.", art(0xFFC9A43A, "H", "Brother Halden")), // dnd_cleric
+        "Heals hard, hits harder.",
+        Artwork.Image(R.drawable.dnd_cleric, "Illustration of Brother Halden, a Dwarf Cleric")),
     DndCard("Fenn Quickstring", "Half-Elf Bard", 26, 13, "3", 10, 15,
-        "Every tavern owes him a favor.", art(0xFF9C4FA8, "F", "Fenn Quickstring")), // dnd_bard
+        "Every tavern owes him a favor.",
+        Artwork.Image(R.drawable.dnd_bard, "Illustration of Fenn Quickstring, a Half-Elf Bard")),
     DndCard("Ashmaw", "Young Red Dragon", 90, 18, "7", 19, 10,
-        "Counts your coins while you sleep.", art(0xFF9E2B1E, "A", "Ashmaw the dragon")), // dnd_dragon
+        "Counts your coins while you sleep.",
+        Artwork.Image(R.drawable.dnd_dragon, "Illustration of Ashmaw, a Young Red Dragon")),
     DndCard("Bramblebeak", "Owlbear", 59, 13, "3", 20, 12,
-        "Hoots first, mauls second.", art(0xFF6E5A34, "B", "Bramblebeak the owlbear")), // dnd_owlbear
+        "Hoots first, mauls second.",
+        Artwork.Image(R.drawable.dnd_owlbear, "Illustration of Bramblebeak, an Owlbear")),
     DndCard("Gorehide", "Cave Troll", 84, 15, "5", 18, 13,
-        "Regrets nothing, regenerates everything.", art(0xFF4A5E3A, "G", "Gorehide the troll")), // dnd_troll
+        "Regrets nothing, regenerates everything.",
+        Artwork.Image(R.drawable.dnd_troll, "Illustration of Gorehide, a Cave Troll")),
 )
 
 fun dndEventLabel(direction: SwipeDirection, name: String): String =
