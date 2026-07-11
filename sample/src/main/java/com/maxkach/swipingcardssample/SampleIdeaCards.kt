@@ -67,6 +67,48 @@ val sampleIdeas = listOf(
         backgroundColor = Color(0xFF3AAF96),
         orbColor = Color(0xFF6DD5C3)
     ),
+    IdeaCard(
+        title = "Recipe Remix",
+        description = "Turns the ingredients you have into dinner you'll love.",
+        reason = "Because you like improvising and hate letting good food go to waste.",
+        backgroundColor = Color(0xFFE08A5C),
+        orbColor = Color(0xFFF0B08A)
+    ),
+    IdeaCard(
+        title = "Focus Flow",
+        description = "A gentle pomodoro timer that learns your best working hours.",
+        reason = "Because you do your finest work in long, undistracted stretches.",
+        backgroundColor = Color(0xFF3F5B8C),
+        orbColor = Color(0xFF7189B8)
+    ),
+    IdeaCard(
+        title = "Green Thumb",
+        description = "Plant care reminders tuned to each species in your home.",
+        reason = "Because you keep adopting plants and want them all to thrive.",
+        backgroundColor = Color(0xFF5BA85C),
+        orbColor = Color(0xFF8CCB8D)
+    ),
+    IdeaCard(
+        title = "Sound Escape",
+        description = "Layered ambient soundscapes for focus, rest, and sleep.",
+        reason = "Because the right background sound changes how a room feels.",
+        backgroundColor = Color(0xFF7A4CA8),
+        orbColor = Color(0xFFA57CC6)
+    ),
+    IdeaCard(
+        title = "Budget Buddy",
+        description = "Friendly weekly money check-ins without the spreadsheets.",
+        reason = "Because you want clarity on spending without the busywork.",
+        backgroundColor = Color(0xFF2E9E8F),
+        orbColor = Color(0xFF63C7B8)
+    ),
+    IdeaCard(
+        title = "Trailblazer",
+        description = "Discovers nearby hikes matched to your time and energy.",
+        reason = "Because a good trail is your favorite way to reset.",
+        backgroundColor = Color(0xFFB5763A),
+        orbColor = Color(0xFFD6A06B)
+    ),
 )
 
 @Composable

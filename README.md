@@ -18,17 +18,44 @@ A Jetpack Compose card stack widget with swipe-to-cycle gestures, 3D perspective
 ## Usage
 
 ```kotlin
-val state = rememberSwipingCardsState(itemCount = items.size)
-
 SwipingCards(
-    state = state,
-    modifier = Modifier.fillMaxSize(),
-    onCardSwiped = { index -> /* handle dismiss */ },
-) { index ->
-    // Your card content
-    MyCard(items[index])
+    cards = items,
+    key = { it.id },
+    modifier = Modifier
+        .fillMaxWidth(0.8f)
+        .aspectRatio(3f / 4f),
+    maxVisibleCards = 4,
+    onSwipe = { result ->
+        // result.card, result.key, result.direction, result.resultingOrder
+    },
+) { item ->
+    MyCard(item)
 }
 ```
+
+The deck is an infinite circular queue of any size: swiping the front card sends it
+to the back. Supply your list via `cards` and a stable `key`; the component keeps an
+optimistic internal order and reconciles it against your list without restarting
+in-flight animations. The deck fills the size you give it through `modifier` — no card
+dimensions are hardcoded. The 3D tilt and swipe sensitivity are also tunable via the
+optional `maxRotationY` (default `38f` degrees) and `swipeThresholdFraction` (default
+`0.20f`) parameters.
+
+**Reconciliation note:** removing/adding cards and confirming an optimistic swipe
+reconcile smoothly without interrupting in-flight animations. When an external update
+reorders cards that stay in the deck, surviving cards are re-seated to their new stack
+positions immediately (without an animated transition).
+
+### Migrating from the index-based API
+
+The previous `rememberSwipingCardsState(itemCount = …)` + `SwipingCards(state, …)` API
+has been replaced by the generic list/key API above:
+
+- Pass your `cards` list and a `key` selector instead of an item count.
+- `cardContent` and `onSwipe` receive the card (`T`) instead of an integer index —
+  `onSwipe` now delivers a `SwipeResult<T>` (`card`, `key`, `direction`, `resultingOrder`).
+- Size the deck yourself via `Modifier` (e.g. `.aspectRatio(3f / 4f)`); the old fixed
+  75%-width / 4:3 sizing is gone.
 
 ## License
 
