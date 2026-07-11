@@ -162,8 +162,8 @@ Vibrant animated action-fantasy movie poster, portrait 2:3 aspect ratio, full-bl
 
 ---
 
-## Progress
+## Progress — all 21 delivered ✅
 
-Dating (5):    [ ] mira  [ ] rowan  [ ] kai  [ ] sol  [ ] nova
-D&D (10):      [ ] rogue  [ ] warlock  [ ] barbarian  [ ] ranger  [ ] fighter  [ ] cleric  [ ] bard  [ ] dragon  [ ] owlbear  [ ] troll
-Streaming (6): [ ] stranger_things  [ ] squid_game  [ ] the_crown  [ ] dark  [ ] mindhunter  [ ] kpop_demon_hunters
+Dating (5):    [x] mira  [x] rowan  [x] kai  [x] sol  [x] nova
+D&D (10):      [x] rogue  [x] warlock  [x] barbarian  [x] ranger  [x] fighter  [x] cleric  [x] bard  [x] dragon  [x] owlbear  [x] troll
+Streaming (6): [x] stranger_things  [x] squid_game  [x] the_crown  [x] dark  [x] mindhunter  [x] kpop_demon_hunters
