@@ -36,18 +36,16 @@ data class BankCard(
     val gradient: List<Color>,
 )
 
-// All data is fictional. These are not real cards and imply no real payment flow.
+// A deliberately small roster (3) — the "few cards" demo, contrasting the 10-card
+// D&D deck. All data is fictional; these are not real cards and imply no real
+// payment flow.
 val bankCards: List<BankCard> = listOf(
     BankCard("Aurora Everyday", "4242", "A. EXAMPLE", "08/29", "1% back on everything",
         listOf(Color(0xFF3A7BD5), Color(0xFF00D2FF))),
     BankCard("Zephyr Travel", "8817", "A. EXAMPLE", "11/28", "No foreign transaction fees",
         listOf(Color(0xFF654EA3), Color(0xFFEAAFC8))),
-    BankCard("Nimbus Cashback", "3390", "A. EXAMPLE", "03/27", "3% back on groceries",
-        listOf(Color(0xFF11998E), Color(0xFF38EF7D))),
     BankCard("Onyx Reserve", "1265", "A. EXAMPLE", "06/30", "Airport lounge access",
         listOf(Color(0xFF232526), Color(0xFF414345))),
-    BankCard("Coral Student", "7734", "A. EXAMPLE", "09/28", "No annual fee",
-        listOf(Color(0xFFFF5F6D), Color(0xFFFFC371))),
 )
 
 fun bankEventLabel(direction: SwipeDirection, product: String, last4: String): String =

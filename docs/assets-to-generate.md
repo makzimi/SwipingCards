@@ -5,6 +5,10 @@ image below has a **complete, standalone prompt** — just copy the block into I
 set the **aspect ratio** noted above it, and generate. Bank cards are code-drawn and
 need no images.
 
+**Counts (deliberately different, to show the deck handles any size):** Dating = 5
+portraits · D&D = **10** square illustrations · Bank = 3 (code-drawn, no images). So
+there are **15 images total** to generate.
+
 ## Where the files go
 
 ```
@@ -28,69 +32,94 @@ is swapped one line per entry from `Artwork.Placeholder(...)` to
 
 ---
 
-# Dating — cartoon portraits
+# Dating — cartoon portraits (5)
 
 **Aspect ratio for all 5: `2:3` (portrait).**
 
-### 1. `dating_mira.webp` — ratio `2:3`
+### D1. `dating_mira.webp` — ratio `2:3`
 ```
 Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a cheerful young woman botanist with voluminous curly dark hair, wearing a cozy olive-green cardigan, gently cradling a small potted succulent, warm leafy green color palette. No text, no words, no border, no frame, no logo, no watermark.
 ```
 
-### 2. `dating_rowan.webp` — ratio `2:3`
+### D2. `dating_rowan.webp` — ratio `2:3`
 ```
 Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a friendly young man rock climber with light freckles and a relaxed easy grin, wearing a knit beanie and a rugged jacket, a little chalk dust on his hands, terracotta and burnt-orange color palette. No text, no words, no border, no frame, no logo, no watermark.
 ```
 
-### 3. `dating_kai.webp` — ratio `2:3`
+### D3. `dating_kai.webp` — ratio `2:3`
 ```
 Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a cool young jazz drummer with a stylish undercut hairstyle, over-ear headphones resting around the neck, wearing a dark tee, casually holding a pair of drumsticks, deep indigo and midnight-blue night palette with subtle neon accents. No text, no words, no border, no frame, no logo, no watermark.
 ```
 
-### 4. `dating_sol.webp` — ratio `2:3`
+### D4. `dating_sol.webp` — ratio `2:3`
 ```
 Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a calm ceramicist wearing a clay-smudged apron, hair tied back, softly smiling while holding a handmade teacup, sandy beige and warm neutral earthy color palette. No text, no words, no border, no frame, no logo, no watermark.
 ```
 
-### 5. `dating_nova.webp` — ratio `2:3`
+### D5. `dating_nova.webp` — ratio `2:3`
 ```
 Flat-color cartoon character portrait, friendly modern illustration style, clean vector-like shading, a single person shown waist-up, facing and looking at the viewer with a warm approachable smile, soft out-of-focus gradient studio background, full-bleed composition filling the entire frame, portrait 2:3 aspect ratio. Character: a playful indie game developer with round glasses and a colorful hoodie, mischievous smile, faint pixel and synth motifs floating softly in the background, violet and magenta color palette. No text, no words, no border, no frame, no logo, no watermark.
 ```
 
 ---
 
-# D&D — fantasy card illustrations
+# D&D — fantasy card illustrations (10)
 
-**Aspect ratio for all 5: `1:1` (square).**
+**Aspect ratio for all 10: `1:1` (square).** A mix of heroes and creatures.
 
-### 6. `dnd_rogue.webp` — ratio `1:1` — Lila Underbough, Halfling Rogue
+### N1. `dnd_rogue.webp` — ratio `1:1` — Lila Underbough, Halfling Rogue
 ```
 Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a halfling rogue — a small nimble humanoid with a sly confident grin, wearing a dark hooded leather outfit, wielding two gleaming daggers in a ready crouch, a torch-lit stone dungeon corridor behind her with moody warm firelight. No text, no words, no card frame, no border, no UI, no logo, no watermark.
 ```
 
-### 7. `dnd_warlock.webp` — ratio `1:1` — Kaelen Ashborn, Tiefling Warlock
+### N2. `dnd_warlock.webp` — ratio `1:1` — Kaelen Ashborn, Tiefling Warlock
 ```
 Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a tiefling warlock — a humanoid with crimson skin and long curling horns, glowing violet eldritch energy swirling around one raised hand, wearing ornate dark robes, a faintly glowing arcane sigil behind, mysterious purple lighting. No text, no words, no card frame, no border, no UI, no logo, no watermark.
 ```
 
-### 8. `dnd_barbarian.webp` — ratio `1:1` — Gruk the Unbroken, Half-Orc Barbarian
+### N3. `dnd_barbarian.webp` — ratio `1:1` — Gruk the Unbroken, Half-Orc Barbarian
 ```
 Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a half-orc barbarian — a massive muscular green-skinned warrior with tusks, mid-roar in a battle cry, hoisting a huge two-handed greataxe overhead, tribal war paint across his face and arms, a stormy dark sky with dramatic lightning behind him. No text, no words, no card frame, no border, no UI, no logo, no watermark.
 ```
 
-### 9. `dnd_ranger.webp` — ratio `1:1` — Sylvara Nightbreeze, Elf Ranger
+### N4. `dnd_ranger.webp` — ratio `1:1` — Sylvara Nightbreeze, Elf Ranger
 ```
 Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: an elf ranger — a graceful pointed-eared archer drawing a longbow with an arrow nocked, wearing a hooded green forest cloak, a hawk in flight nearby, a misty sunlit ancient forest background with cool green light. No text, no words, no card frame, no border, no UI, no logo, no watermark.
 ```
 
-### 10. `dnd_fighter.webp` — ratio `1:1` — Ser Aldric Vane, Human Fighter
+### N5. `dnd_fighter.webp` — ratio `1:1` — Ser Aldric Vane, Human Fighter
 ```
 Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a human knight fighter in polished plate armor, longsword raised confidently, a heraldic banner waving behind, standing resolute, warm golden heroic lighting on a battlefield at dawn. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### N6. `dnd_cleric.webp` — ratio `1:1` — Brother Halden, Dwarf Cleric
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a dwarf cleric — a stout bearded dwarf in gleaming ornate plate armor, raising a glowing holy warhammer and a shield bearing a radiant sun emblem, warm divine golden light haloing him inside a stone temple. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### N7. `dnd_bard.webp` — ratio `1:1` — Fenn Quickstring, Half-Elf Bard
+```
+Fantasy trading-card character illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic heroic pose, atmospheric background, square 1:1 aspect ratio. Subject: a half-elf bard — a charismatic pointed-eared young man mid-performance strumming an ornate lute, wearing a flamboyant feathered hat and a traveler's coat, warm tavern candlelight with floating musical sparkles around him. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### N8. `dnd_dragon.webp` — ratio `1:1` — Ashmaw, Young Red Dragon (creature)
+```
+Fantasy trading-card creature illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic menacing pose, atmospheric background, square 1:1 aspect ratio. Subject: a young red dragon — a fierce scaled crimson reptilian beast with spread leathery wings, snarling with smoke curling from its jaws, perched atop a glittering hoard of gold coins, fiery orange and red cavern lighting. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### N9. `dnd_owlbear.webp` — ratio `1:1` — Bramblebeak, Owlbear (creature)
+```
+Fantasy trading-card creature illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic menacing pose, atmospheric background, square 1:1 aspect ratio. Subject: an owlbear — a monstrous hybrid with the feathered head and hooked beak of a giant owl and the massive muscular brown-furred body and claws of a bear, rearing up mid-roar in a shadowy forest, moody green-and-brown lighting. No text, no words, no card frame, no border, no UI, no logo, no watermark.
+```
+
+### N10. `dnd_troll.webp` — ratio `1:1` — Gorehide, Cave Troll (creature)
+```
+Fantasy trading-card creature illustration, painterly digital art, rich detail, dramatic cinematic lighting, a single subject centered and filling the frame in a dynamic menacing pose, atmospheric background, square 1:1 aspect ratio. Subject: a cave troll — a towering gangly green-skinned troll with long grasping claws and a wart-covered hide, hunched and menacing in a damp torch-lit cavern, sickly green and amber lighting. No text, no words, no card frame, no border, no UI, no logo, no watermark.
 ```
 
 ---
 
 ## Progress
 
-Dating: [ ] mira  [ ] rowan  [ ] kai  [ ] sol  [ ] nova
-D&D:    [ ] rogue  [ ] warlock  [ ] barbarian  [ ] ranger  [ ] fighter
+Dating (5): [ ] mira  [ ] rowan  [ ] kai  [ ] sol  [ ] nova
+D&D (10):   [ ] rogue  [ ] warlock  [ ] barbarian  [ ] ranger  [ ] fighter  [ ] cleric  [ ] bard  [ ] dragon  [ ] owlbear  [ ] troll
