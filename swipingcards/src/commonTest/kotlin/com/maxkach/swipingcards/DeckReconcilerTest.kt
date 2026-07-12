@@ -1,8 +1,9 @@
 package com.maxkach.swipingcards
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class DeckReconcilerTest {
 
@@ -57,9 +58,11 @@ class DeckReconcilerTest {
         assertTrue(r.added.isEmpty())
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun requireUniqueKeys_throwsOnDuplicate() {
-        DeckReconciler.requireUniqueKeys(listOf("A", "B", "A"))
+        assertFailsWith<IllegalArgumentException> {
+            DeckReconciler.requireUniqueKeys(listOf("A", "B", "A"))
+        }
     }
 
     @Test
