@@ -17,3 +17,6 @@ local.properties
 # Xcode user-specific state
 xcuserdata/
 *.xcuserstate
+
+# Kotlin/Native build cache
+.kotlin/
