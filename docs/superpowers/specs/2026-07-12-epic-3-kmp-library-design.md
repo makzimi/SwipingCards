@@ -145,16 +145,23 @@ to `androidApp`.
 
 ## Publishing metadata
 
-- `maven-publish` plugin on `swipingcards`.
+- `com.vanniktech.maven.publish` plugin on `swipingcards`.
 - `group = "com.maxkach"`, artifact base `swipingcards`, `version = "0.1.0"`.
 - KMP publications for all configured targets; Android publishes the `release` variant
   (`androidTarget { publishLibraryVariants("release") }`). `withSourcesJar()` for source
   artifacts.
 - POM metadata: name, description, license placeholder, project URL.
-- Verified with `publishToMavenLocal`. Explicitly excluded: signing, credentials, Maven
-  Central, release automation.
+- Publishes to the Sonatype Central Portal (`publishToMavenCentral()`), with GPG signing of
+  all publications via `signingInMemoryKey` / `signingInMemoryKeyPassword`; signing is
+  conditional on those properties being present so `publishToMavenLocal` still works
+  keyless for contributors without a signing key.
+- Verified with `publishToMavenLocal`.
 - Consumer documentation (local Gradle `mavenLocal()` + dependency coordinate) added to the
   `swipingcards` README.
+
+> Note: the original epic explicitly excluded Maven Central publication and signing (see
+> Non-goals below); that exclusion was intentionally expanded by the user during
+> implementation to include signed Central Portal publishing.
 
 ## Testing and verification
 

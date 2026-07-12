@@ -20,9 +20,7 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material3)
             implementation(compose.ui)
-            implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
@@ -45,7 +43,9 @@ android {
 
 mavenPublishing {
     publishToMavenCentral()
-    signAllPublications()
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
 
     coordinates("com.maxkach", "swipingcards", "0.1.0")
 

@@ -15,7 +15,7 @@
 - **The library never depends on any `samples` module.**
 - **No `android.*`, `androidx.activity.*`, `androidx.annotation.*`, or `R.drawable` references may appear in any `commonMain` source set.** Platform-only behavior hides behind `internal expect`/`actual`.
 - **Epic 1 behavior (infinite rotation, reconciliation) and the library's public API must remain unchanged.** The existing library unit tests are the contract; they must keep passing.
-- **Publishing coordinates:** `group = "com.maxkach"`, artifact base `swipingcards`, `version = "0.1.0"`. No signing, no credentials, no Maven Central.
+- **Publishing coordinates:** `group = "com.maxkach"`, artifact base `swipingcards`, `version = "0.1.0"`, published via `com.vanniktech.maven.publish` to the Sonatype Central Portal with GPG signing (`signingInMemoryKey`/`signingInMemoryKeyPassword`). This expands the original "no signing, no credentials, no Maven Central" exclusion at the user's request; `publishToMavenLocal` still works keyless for contributors without a signing key.
 - Android config stays `compileSdk 36`, `minSdk 33`, `targetSdk 36`, `JavaVersion.VERSION_11` / `jvmTarget "11"`.
 - Library package stays `com.maxkach.swipingcards`. Gallery package stays `com.maxkach.swipingcardssample`.
 - iOS targets and simulator run must succeed on the local machine (Xcode 26.5, an installed iOS Simulator runtime).
