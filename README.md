@@ -1,5 +1,8 @@
 # SwipingCards
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.makzimi/swipingcards)](https://central.sonatype.com/artifact/io.github.makzimi/swipingcards)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A Compose Multiplatform (Android + iOS) card-stack widget with swipe-to-cycle gestures, 3D perspective rotation, and spring-based animations.
 
 https://github.com/user-attachments/assets/5f20b261-ac51-4bd1-acd1-f8612707c9d6
