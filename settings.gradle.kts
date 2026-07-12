@@ -20,6 +20,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "SwipingCard"
-include(":sample")
 include(":swipingcards")
- 
+include(":samples:shared")
+include(":samples:androidApp")

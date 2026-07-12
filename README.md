@@ -1,6 +1,6 @@
 # SwipingCards
 
-A Jetpack Compose card-stack widget with swipe-to-cycle gestures, 3D perspective rotation, and spring-based animations.
+A Compose Multiplatform (Android + iOS) card-stack widget with swipe-to-cycle gestures, 3D perspective rotation, and spring-based animations.
 
 https://github.com/user-attachments/assets/5f20b261-ac51-4bd1-acd1-f8612707c9d6
 
@@ -19,16 +19,30 @@ https://github.com/user-attachments/assets/5f20b261-ac51-4bd1-acd1-f8612707c9d6
 
 ## Getting started
 
-SwipingCards isn't published to a Maven repository yet. Consume it as a local Gradle
-module: include `:swipingcards` in your `settings.gradle.kts` and add it to your app:
+SwipingCards is available from Maven Central (see [`swipingcards/README.md`](swipingcards/README.md)
+for full details). Add it to a Compose Multiplatform project's `commonMain`:
 
 ```kotlin
-dependencies {
-    implementation(project(":swipingcards"))
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.maxkach:swipingcards:0.1.0")
+        }
+    }
 }
 ```
 
-Requires Android `minSdk 33` and Jetpack Compose.
+You can also consume it locally without a Central release via
+`./gradlew :swipingcards:publishToMavenLocal`.
+
+Requires Android `minSdk 33` and iOS via Compose Multiplatform.
+
+### Modules
+
+- `swipingcards/` — the Compose Multiplatform library (Android + iOS targets)
+- `samples/shared` — the shared example gallery (Compose Multiplatform)
+- `samples/androidApp` — thin Android launcher for the gallery
+- `samples/iosApp` — thin iOS launcher for the gallery
 
 ## Usage
 
@@ -107,9 +121,10 @@ enum class SwipeDirection { Left, Right, Up, Down }
 
 ## Example gallery
 
-The `:sample` app is a gallery that drives the *same* `SwipingCards` component through
+`samples/shared` is a gallery that drives the *same* `SwipingCards` component through
 four very different demos — proof that one deck handles different dimensions, content,
 actions, and card counts. Each demo feeds a small event history from its swipe callback.
+It's launched on Android via `samples/androidApp` and on iOS via `samples/iosApp`.
 
 | Demo | Card shape | Deck size | Content |
 | --- | --- | --- | --- |
@@ -118,8 +133,9 @@ actions, and card counts. Each demo feeds a small event history from its swipe c
 | **D&D** | Near-square 4:5 | 10 cards | Ornate "printed card" — framed art, stat block (reject / recruit) |
 | **Streaming** | 2:3 poster on black | 6 cards | Netflix-style poster with Play / My List buttons and badges |
 
-Run it with `./gradlew :sample:installDebug` (or open the project and launch the
-`sample` app).
+Run it on Android with `./gradlew :samples:androidApp:installDebug` (or open the
+project and launch the `androidApp` app), or open `samples/iosApp` in Xcode and run
+it on an iOS simulator.
 
 ## License
 
