@@ -20,6 +20,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "SwipingCard"
-include(":sample")
 include(":swipingcards")
+include(":sample")
+include(":samples:shared")
  
