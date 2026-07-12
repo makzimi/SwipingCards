@@ -3,15 +3,11 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.kotlin.compose)
-    id("maven-publish")
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
-
-group = "com.maxkach"
-version = "0.1.0"
 
 kotlin {
     androidTarget {
-        publishLibraryVariants("release")
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
         }
@@ -45,19 +41,37 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
 }
 
-publishing {
-    publications.withType<MavenPublication>().configureEach {
-        pom {
-            name.set("SwipingCards")
-            description.set("A Compose Multiplatform swipeable card deck.")
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    coordinates("com.maxkach", "swipingcards", "0.1.0")
+
+    pom {
+        name.set("SwipingCards")
+        description.set("A Compose Multiplatform swipeable card-stack widget with swipe-to-cycle gestures, infinite deck, and spring animations.")
+        inceptionYear.set("2026")
+        url.set("https://github.com/makzimi/SwipingCards")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://github.com/makzimi/SwipingCards/blob/main/LICENSE")
+                distribution.set("repo")
+            }
+        }
+        developers {
+            developer {
+                id.set("makzimi")
+                name.set("Maxim Kachinkin")
+                url.set("https://github.com/makzimi")
+            }
+        }
+        scm {
             url.set("https://github.com/makzimi/SwipingCards")
+            connection.set("scm:git:git://github.com/makzimi/SwipingCards.git")
+            developerConnection.set("scm:git:ssh://git@github.com/makzimi/SwipingCards.git")
         }
     }
 }
