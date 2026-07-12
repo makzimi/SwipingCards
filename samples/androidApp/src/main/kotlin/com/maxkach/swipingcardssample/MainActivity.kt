@@ -4,17 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.maxkach.swipingcardssample.gallery.GalleryApp
-import com.maxkach.swipingcardssample.ui.theme.SwipingCardExampleTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SwipingCardExampleTheme {
-                GalleryApp()
-            }
+            App()
         }
     }
 }

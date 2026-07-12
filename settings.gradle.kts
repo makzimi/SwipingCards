@@ -21,6 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "SwipingCard"
 include(":swipingcards")
-include(":sample")
 include(":samples:shared")
- 
+include(":samples:androidApp")
