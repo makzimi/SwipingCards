@@ -42,12 +42,12 @@ android {
 }
 
 mavenPublishing {
-    publishToMavenCentral()
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
     if (providers.gradleProperty("signingInMemoryKey").isPresent) {
         signAllPublications()
     }
 
-    coordinates("com.maxkach", "swipingcards", "0.1.0")
+    coordinates("io.github.makzimi", "swipingcards", "0.1.0")
 
     pom {
         name.set("SwipingCards")

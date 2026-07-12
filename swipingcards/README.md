@@ -4,7 +4,7 @@ A Compose Multiplatform swipeable card deck (Android + iOS).
 
 ## Coordinates
 
-- group: `com.maxkach`
+- group: `io.github.makzimi`
 - artifact: `swipingcards`
 - version: `0.1.0`
 
@@ -20,7 +20,7 @@ Once published, add it to a Compose Multiplatform project:
     kotlin {
         sourceSets {
             commonMain.dependencies {
-                implementation("com.maxkach:swipingcards:0.1.0")
+                implementation("io.github.makzimi:swipingcards:0.1.0")
             }
         }
     }
