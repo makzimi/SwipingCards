@@ -33,7 +33,7 @@ android {
     namespace = "com.maxkach.swipingcards"
     compileSdk = 36
     defaultConfig {
-        minSdk = 33
+        minSdk = 26
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

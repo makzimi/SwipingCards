@@ -38,7 +38,7 @@ kotlin {
 You can also consume it locally without a Central release via
 `./gradlew :swipingcards:publishToMavenLocal`.
 
-Requires Android `minSdk 33` and iOS via Compose Multiplatform.
+Requires Android `minSdk 26` and iOS via Compose Multiplatform.
 
 ### Modules
 
