@@ -47,7 +47,7 @@ mavenPublishing {
         signAllPublications()
     }
 
-    coordinates("io.github.makzimi", "swipingcards", "0.1.0")
+    coordinates("io.github.makzimi", "swipingcards", "0.1.1")
 
     pom {
         name.set("SwipingCards")

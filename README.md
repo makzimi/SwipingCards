@@ -29,7 +29,7 @@ for full details). Add it to a Compose Multiplatform project's `commonMain`:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.makzimi:swipingcards:0.1.0")
+            implementation("io.github.makzimi:swipingcards:0.1.1")
         }
     }
 }
