@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -139,6 +140,10 @@ fun <T> SwipingCards(
             deck.cardHeightPx = cardHeight.toPx()
         }
 
+        LaunchedEffect(deck.cardWidthPx, deck.cardHeightPx, deck.density) {
+            deck.updateLayoutTargets()
+        }
+
         val scope = remember(cardWidth, cardHeight) {
             SwipingCardsScopeImpl(cardWidth, cardHeight)
         }
@@ -220,8 +225,9 @@ private fun <T> SwipingCardsScope.ExitingCard(
                 rotationZ = animState.rotationZ.value
                 this.alpha = animState.alpha.value
 
-                translationX = animState.translationXDp.value * density
-                translationY = animState.translationYDp.value * density
+                val translation = animState.renderedTranslation(density)
+                translationX = translation.x
+                translationY = translation.y
             },
     ) {
         cardContent(card)
@@ -261,10 +267,11 @@ private fun <T> SwipingCardsScope.SwipingCard(
                 rotationZ = animState.rotationZ.value
                 this.alpha = animState.alpha.value
 
-                translationX = animState.translationXDp.value * density +
+                val translation = animState.renderedTranslation(density)
+                translationX = translation.x +
                     if (stackPosition == 0) deck.dragOffsetX.value
                     else deck.backgroundRepulsionX * positionConfig.repulsionFactor
-                translationY = animState.translationYDp.value * density +
+                translationY = translation.y +
                     if (stackPosition == 0) deck.dragOffsetY.value
                     else deck.backgroundRepulsionY * positionConfig.repulsionFactor
             }
