@@ -109,6 +109,52 @@ each card fills the deck box.
 | `onSwipe: (SwipeResult<T>) -> Unit` | `{}` | Called exactly once when a swipe commits. |
 | `cardContent: @Composable (T) -> Unit` | — | Renders a single card. |
 
+### Custom stack geometry
+
+The original overload keeps its signature and default appearance. An additional
+overload accepts `cardGeometry: (Int) -> StackCardGeometry` to customize scale,
+Z rotation and X/Y offsets per stack position:
+
+```kotlin
+SwipingCards(
+    cards = items,
+    key = { it.id },
+    modifier = Modifier.width(280.dp).height(378.dp),
+    maxVisibleCards = 3,
+    cardGeometry = { position ->
+        val default = SwipingCardsDefaults.cardGeometry(position)
+        when (position) {
+            1 -> default.copy(scale = 0.86f, rotationZ = -10f, offsetX = (-16).dp, offsetY = (-40).dp)
+            2 -> default.copy(scale = 0.86f, rotationZ = 10f, offsetX = 16.dp, offsetY = (-40).dp)
+            else -> default
+        }
+    },
+) { item ->
+    MyCard(item)
+}
+```
+
+Position `0` is the front card. The provider must handle every non-negative
+position, including the extra slot at `maxVisibleCards` used for entry/exit
+animations when the deck has a hidden queue. Returning the default for other
+positions is a convenient fallback.
+
+Offsets are in **dp**, added **after the existing bottom-corner alignment**;
+positive X moves right and positive Y moves down. Scale and rotation still use the
+card's center. Offsets do not enlarge the measured deck, so leave room around it
+for a wider fan. The same geometry is used for initial layout, promotion, hidden
+queue entry/exit and external reorders. Swipe thresholds, repulsion and opacity
+keep their existing behavior.
+
+The provider is captured when the deck is created and should return stable values
+for its lifetime. To switch layouts, use Compose `key(layout) { SwipingCards(...) }`;
+this resets the deck to the supplied cards and cancels the current gesture. The
+bank-card sample demonstrates switching between the original and custom fan.
+
+| Default geometry | Custom geometry |
+| --- | --- |
+| <img src="samples/screenshots/bank-default.png" width="240" alt="Bank cards with the default stack geometry"> | <img src="samples/screenshots/bank-custom.png" width="240" alt="Bank cards with equally scaled rear cards, wider rotation and upward offsets"> |
+
 Every committed swipe delivers a `SwipeResult<T>`:
 
 ```kotlin

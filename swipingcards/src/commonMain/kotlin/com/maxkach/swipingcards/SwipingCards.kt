@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
@@ -68,6 +69,45 @@ fun <T> SwipingCards(
     onSwipe: (SwipeResult<T>) -> Unit = {},
     cardContent: @Composable (T) -> Unit,
 ) {
+    SwipingCards(
+        cards = cards,
+        key = key,
+        cardGeometry = SwipingCardsDefaults::cardGeometry,
+        modifier = modifier,
+        maxVisibleCards = maxVisibleCards,
+        maxRotationY = maxRotationY,
+        swipeThresholdFraction = swipeThresholdFraction,
+        onSwipe = onSwipe,
+        cardContent = cardContent,
+    )
+}
+
+/**
+ * A [SwipingCards] deck with custom geometry for each stack position.
+ *
+ * [cardGeometry] receives a zero-based position, not an item index: zero is the
+ * front card. It must handle every non-negative position, including the extra slot
+ * at [maxVisibleCards] used while a card enters or leaves the visible window.
+ * Start with [SwipingCardsDefaults.cardGeometry] and copy the properties to change.
+ *
+ * The provider is captured when the deck is created. Keep its results stable for
+ * that deck's lifetime. To switch layouts, wrap the deck in a Compose `key(layout)`;
+ * doing so restarts the deck from [cards] and resets any in-flight gesture.
+ *
+ * Other parameters and swipe behavior are the same as the default overload.
+ */
+@Composable
+fun <T> SwipingCards(
+    cards: List<T>,
+    key: (T) -> Any,
+    cardGeometry: (Int) -> StackCardGeometry,
+    modifier: Modifier = Modifier,
+    maxVisibleCards: Int = 4,
+    maxRotationY: Float = 38f,
+    swipeThresholdFraction: Float = 0.20f,
+    onSwipe: (SwipeResult<T>) -> Unit = {},
+    cardContent: @Composable (T) -> Unit,
+) {
     require(maxVisibleCards >= 1) {
         "SwipingCards: maxVisibleCards must be >= 1 but was $maxVisibleCards."
     }
@@ -77,7 +117,7 @@ fun <T> SwipingCards(
     }
     val cardsByKey = remember(cards) { cards.associateBy(key) }
 
-    val deck = remember { DeckState() }
+    val deck = remember { DeckState(cardGeometry) }
     deck.maxVisibleCards = maxVisibleCards
     deck.maxRotationY = maxRotationY
     deck.swipeThresholdFraction = swipeThresholdFraction
@@ -95,6 +135,7 @@ fun <T> SwipingCards(
         val cardWidth = maxWidth
         val cardHeight = maxHeight
         with(LocalDensity.current) {
+            deck.density = density
             deck.containerWidthPx = constraints.maxWidth.toFloat()
             deck.cardWidthPx = cardWidth.toPx()
             deck.cardHeightPx = cardHeight.toPx()
@@ -188,8 +229,8 @@ private fun <T> SwipingCardsScope.ExitingCard(
                     cardHeightPx = cardHeight.toPx(),
                 )
 
-                translationX = animState.translationX.value
-                translationY = bottomAlignY + animState.translationY.value
+                translationX = animState.translationXDp.value * density
+                translationY = bottomAlignY + animState.translationYDp.value * density
             },
     ) {
         cardContent(card)
@@ -209,12 +250,13 @@ private fun <T> SwipingCardsScope.SwipingCard(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val animState = deck.getOrCreateCardAnimState(cardKey, stackPosition)
-    val positionConfig = stackPositionConfig(stackPosition)
+    val positionConfig = deck.configForPosition(stackPosition)
     val card = cardsByKey.getValue(cardKey)
 
     // The drag gesture below is a long-lived pointerInput(Unit) that must never
     // restart, so its closures cannot capture cardsByKey/onSwipe by value — they'd
     // go stale after an external cards update. rememberUpdatedState keeps them fresh.
+    val latestAnimState = rememberUpdatedState(animState)
     val latestCardsByKey = rememberUpdatedState(cardsByKey)
     val latestOnSwipe = rememberUpdatedState(onSwipe)
 
@@ -235,15 +277,16 @@ private fun <T> SwipingCardsScope.SwipingCard(
                     cardHeightPx = cardHeight.toPx(),
                 )
 
-                translationX = animState.translationX.value +
+                translationX = animState.translationXDp.value * density +
                     if (stackPosition == 0) deck.dragOffsetX.value
                     else deck.backgroundRepulsionX * positionConfig.repulsionFactor
                 translationY = bottomAlignY +
-                    animState.translationY.value +
+                    animState.translationYDp.value * density +
                     if (stackPosition == 0) deck.dragOffsetY.value
                     else deck.backgroundRepulsionY * positionConfig.repulsionFactor
             }
             .conditionalDragGesture(
+                animState = latestAnimState,
                 deck = deck,
                 cardsByKey = latestCardsByKey,
                 hapticFeedback = hapticFeedback,
@@ -257,6 +300,7 @@ private fun <T> SwipingCardsScope.SwipingCard(
 }
 
 private fun <T> Modifier.conditionalDragGesture(
+    animState: State<CardAnimState>,
     deck: DeckState,
     cardsByKey: State<Map<Any, T>>,
     hapticFeedback: HapticFeedback,
@@ -266,6 +310,7 @@ private fun <T> Modifier.conditionalDragGesture(
 ): Modifier = then(
     if (needToDrag()) {
         Modifier.cardDragGesture(
+            animState = animState,
             deck = deck,
             cardsByKey = cardsByKey,
             hapticFeedback = hapticFeedback,
@@ -278,6 +323,7 @@ private fun <T> Modifier.conditionalDragGesture(
 )
 
 private fun <T> Modifier.cardDragGesture(
+    animState: State<CardAnimState>,
     deck: DeckState,
     cardsByKey: State<Map<Any, T>>,
     hapticFeedback: HapticFeedback,
@@ -286,24 +332,28 @@ private fun <T> Modifier.cardDragGesture(
 ): Modifier = pointerInput(Unit) {
     val velocityTracker = VelocityTracker()
     var gestureBlocked = false
+    var gesturePosition = Offset.Zero
 
     detectDragGestures(
         onDragStart = {
             gestureBlocked = deck.isAnimating
             if (!gestureBlocked) {
                 velocityTracker.resetTracking()
+                gesturePosition = Offset.Zero
                 deck.hasPassedThreshold = false
             }
         },
         onDrag = { change, dragAmount ->
             if (gestureBlocked) return@detectDragGestures
             change.consume()
-            velocityTracker.addPosition(change.uptimeMillis, change.position)
+            val deckDragAmount = animState.value.toDeckOffset(dragAmount)
+            gesturePosition += deckDragAmount
+            velocityTracker.addPosition(change.uptimeMillis, gesturePosition)
             coroutineScope.launch {
-                deck.dragOffsetX.snapTo(deck.dragOffsetX.value + dragAmount.x)
+                deck.dragOffsetX.snapTo(deck.dragOffsetX.value + deckDragAmount.x)
             }
             coroutineScope.launch {
-                deck.dragOffsetY.snapTo(deck.dragOffsetY.value + dragAmount.y)
+                deck.dragOffsetY.snapTo(deck.dragOffsetY.value + deckDragAmount.y)
             }
             val threshold = deck.containerWidthPx * deck.swipeThresholdFraction
             val distanceFromCenter = sqrt(

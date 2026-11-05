@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
@@ -27,13 +28,16 @@ private const val PROMOTE_SPRING_STIFFNESS = 80f
 
 private const val DEG_TO_RAD = PI / 180.0
 
-// All visual properties for a card at a given stack position — single source of truth.
+// Internal appearance also includes gesture and visibility behavior, which the
+// geometry API deliberately leaves unchanged.
 internal data class StackPositionConfig(
     val scale: Float,
     val rotationZ: Float,
     val alpha: Float,
     val repulsionFactor: Float,
     val elevation: Dp,
+    val offsetX: Dp = 0.dp,
+    val offsetY: Dp = 0.dp,
 )
 
 internal fun stackPositionConfig(position: Int): StackPositionConfig = when (position) {
@@ -82,12 +86,24 @@ internal fun bottomAlignmentOffsetY(
 
 // Per-card animated properties — each key tracks its own visual state.
 @Stable
-internal class CardAnimState(config: StackPositionConfig, initialXPx: Float) {
+internal class CardAnimState(config: StackPositionConfig, initialXDp: Float, initialYDp: Float = 0f) {
     val scale = Animatable(config.scale)
     val rotationZ = Animatable(config.rotationZ)
-    val translationX = Animatable(initialXPx)
-    val translationY = Animatable(0f)
+    // Convert to pixels when drawing so density changes do not invalidate animation state.
+    val translationXDp = Animatable(initialXDp)
+    val translationYDp = Animatable(initialYDp)
     val alpha = Animatable(config.alpha)
+
+    // Pointer deltas are local to the scaled/rotated card; translations use deck axes.
+    fun toDeckOffset(offset: Offset): Offset {
+        val radians = rotationZ.value * DEG_TO_RAD
+        val cosR = cos(radians).toFloat()
+        val sinR = sin(radians).toFloat()
+        return Offset(
+            x = (offset.x * cosR - offset.y * sinR) * scale.value,
+            y = (offset.x * sinR + offset.y * cosR) * scale.value,
+        )
+    }
 }
 
 /**
@@ -95,7 +111,9 @@ internal class CardAnimState(config: StackPositionConfig, initialXPx: Float) {
  * be ahead of the caller's list after a swipe) and the per-card animation state.
  */
 @Stable
-internal class DeckState {
+internal class DeckState(
+    private val cardGeometry: (Int) -> StackCardGeometry = SwipingCardsDefaults::cardGeometry,
+) {
 
     var internalOrder by mutableStateOf<List<Any>>(emptyList())
         private set
@@ -112,6 +130,7 @@ internal class DeckState {
     var containerWidthPx by mutableFloatStateOf(0f)
     var cardWidthPx by mutableFloatStateOf(0f)
     var cardHeightPx by mutableFloatStateOf(0f)
+    var density by mutableFloatStateOf(1f)
 
     val dragOffsetX = Animatable(0f)
     val dragOffsetY = Animatable(0f)
@@ -146,11 +165,28 @@ internal class DeckState {
     val backgroundRepulsionY: Float
         get() = -dragOffsetY.value * BACKGROUND_VERTICAL_REPULSION_FACTOR
 
+    // Resolve every position through the same provider, including hidden entry/exit slots.
+    fun configForPosition(position: Int): StackPositionConfig {
+        val geometry = cardGeometry(position)
+        return stackPositionConfig(position).copy(
+            scale = geometry.scale,
+            rotationZ = geometry.rotationZ,
+            offsetX = geometry.offsetX,
+            offsetY = geometry.offsetY,
+        )
+    }
+
+    private fun idleXDp(position: Int, config: StackPositionConfig): Float =
+        idleTranslationXPx(position, config.scale, config.rotationZ, cardWidthPx) / density +
+            config.offsetX.value
+
+    private fun idleYDp(config: StackPositionConfig): Float = config.offsetY.value
+
     fun getOrCreateCardAnimState(key: Any, stackPosition: Int): CardAnimState =
         cardAnimStates.getOrPut(key) {
-            val config = stackPositionConfig(stackPosition)
-            val xPx = idleTranslationXPx(stackPosition, config.scale, config.rotationZ, cardWidthPx)
-            CardAnimState(config, xPx)
+            val config = configForPosition(stackPosition)
+            val xDp = idleXDp(stackPosition, config)
+            CardAnimState(config, xDp, idleYDp(config))
         }
 
     /** Animation state for a card currently rendered as an exiting layer, or null. */
@@ -251,16 +287,24 @@ internal class DeckState {
             onGestureUnlock()
             return
         }
-        dismissedState.translationX.snapTo(dismissedState.translationX.value + dragOffsetX.value)
-        dismissedState.translationY.snapTo(dismissedState.translationY.value + dragOffsetY.value)
+        dismissedState.translationXDp.snapTo(
+            dismissedState.translationXDp.value + dragOffsetX.value / density,
+        )
+        dismissedState.translationYDp.snapTo(
+            dismissedState.translationYDp.value + dragOffsetY.value / density,
+        )
 
         // 2. Fold repulsion offsets into background cards.
         for (pos in 1 until visibleCount) {
             val backgroundKey = internalOrder[pos]
             val backgroundState = cardAnimStates[backgroundKey] ?: continue
-            val repulsionFactor = stackPositionConfig(pos).repulsionFactor
-            backgroundState.translationX.snapTo(backgroundState.translationX.value + backgroundRepulsionX * repulsionFactor)
-            backgroundState.translationY.snapTo(backgroundState.translationY.value + backgroundRepulsionY * repulsionFactor)
+            val repulsionFactor = configForPosition(pos).repulsionFactor
+            backgroundState.translationXDp.snapTo(
+                backgroundState.translationXDp.value + backgroundRepulsionX * repulsionFactor / density,
+            )
+            backgroundState.translationYDp.snapTo(
+                backgroundState.translationYDp.value + backgroundRepulsionY * repulsionFactor / density,
+            )
         }
 
         // 3. Transfer container rotation to residual so it unwinds smoothly.
@@ -288,9 +332,9 @@ internal class DeckState {
             // Seed the newly revealed rear card one slot deeper so it rises into place.
             val enteringKey = visibleKeys.last()
             if (cardAnimStates[enteringKey] == null) {
-                val deep = stackPositionConfig(promoteCount)
-                val deepX = idleTranslationXPx(promoteCount, deep.scale, deep.rotationZ, cardWidthPx)
-                cardAnimStates[enteringKey] = CardAnimState(deep, deepX)
+                val deep = configForPosition(promoteCount)
+                val deepXDp = idleXDp(promoteCount, deep)
+                cardAnimStates[enteringKey] = CardAnimState(deep, deepXDp, idleYDp(deep))
             }
         }
 
@@ -311,13 +355,13 @@ internal class DeckState {
         if (hasHiddenQueue) {
             coroutineScope.launch {
                 try {
-                    val exitConfig = stackPositionConfig(promoteCount)
-                    val exitX = idleTranslationXPx(promoteCount, exitConfig.scale, exitConfig.rotationZ, cardWidthPx)
+                    val exitConfig = configForPosition(promoteCount)
+                    val exitXDp = idleXDp(promoteCount, exitConfig)
                     coroutineScope {
                         launch { dismissedState.scale.animateTo(exitConfig.scale, promoteSpring) }
                         launch { dismissedState.rotationZ.animateTo(exitConfig.rotationZ, promoteSpring) }
-                        launch { dismissedState.translationX.animateTo(exitX, promoteSpring) }
-                        launch { dismissedState.translationY.animateTo(0f, promoteSpring) }
+                        launch { dismissedState.translationXDp.animateTo(exitXDp, promoteSpring) }
+                        launch { dismissedState.translationYDp.animateTo(idleYDp(exitConfig), promoteSpring) }
                         launch { dismissedState.alpha.animateTo(0f, promoteSpring) }
                     }
                 } finally {
@@ -334,12 +378,12 @@ internal class DeckState {
 
                 for ((newPos, cardKey) in visibleKeys.withIndex()) {
                     val state = cardAnimStates[cardKey] ?: continue
-                    val config = stackPositionConfig(newPos)
-                    val targetXPx = idleTranslationXPx(newPos, config.scale, config.rotationZ, cardWidthPx)
+                    val config = configForPosition(newPos)
+                    val targetXDp = idleXDp(newPos, config)
                     launch { state.scale.animateTo(config.scale, promoteSpring) }
                     launch { state.rotationZ.animateTo(config.rotationZ, promoteSpring) }
-                    launch { state.translationX.animateTo(targetXPx, promoteSpring) }
-                    launch { state.translationY.animateTo(0f, promoteSpring) }
+                    launch { state.translationXDp.animateTo(targetXDp, promoteSpring) }
+                    launch { state.translationYDp.animateTo(idleYDp(config), promoteSpring) }
                     launch { state.alpha.animateTo(config.alpha, promoteSpring) }
                 }
             }
