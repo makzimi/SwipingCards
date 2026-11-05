@@ -68,6 +68,45 @@ fun <T> SwipingCards(
     onSwipe: (SwipeResult<T>) -> Unit = {},
     cardContent: @Composable (T) -> Unit,
 ) {
+    SwipingCards(
+        cards = cards,
+        key = key,
+        cardGeometry = SwipingCardsDefaults::cardGeometry,
+        modifier = modifier,
+        maxVisibleCards = maxVisibleCards,
+        maxRotationY = maxRotationY,
+        swipeThresholdFraction = swipeThresholdFraction,
+        onSwipe = onSwipe,
+        cardContent = cardContent,
+    )
+}
+
+/**
+ * A [SwipingCards] deck with custom geometry for each stack position.
+ *
+ * [cardGeometry] receives a zero-based position, not an item index: zero is the
+ * front card. It must handle every non-negative position, including the extra slot
+ * at [maxVisibleCards] used while a card enters or leaves the visible window.
+ * Start with [SwipingCardsDefaults.cardGeometry] and copy the properties to change.
+ *
+ * The provider is captured when the deck is created. Keep its results stable for
+ * that deck's lifetime. To switch layouts, wrap the deck in a Compose `key(layout)`;
+ * doing so restarts the deck from [cards] and resets any in-flight gesture.
+ *
+ * Other parameters and swipe behavior are the same as the default overload.
+ */
+@Composable
+fun <T> SwipingCards(
+    cards: List<T>,
+    key: (T) -> Any,
+    cardGeometry: (Int) -> StackCardGeometry,
+    modifier: Modifier = Modifier,
+    maxVisibleCards: Int = 4,
+    maxRotationY: Float = 38f,
+    swipeThresholdFraction: Float = 0.20f,
+    onSwipe: (SwipeResult<T>) -> Unit = {},
+    cardContent: @Composable (T) -> Unit,
+) {
     require(maxVisibleCards >= 1) {
         "SwipingCards: maxVisibleCards must be >= 1 but was $maxVisibleCards."
     }
@@ -77,7 +116,7 @@ fun <T> SwipingCards(
     }
     val cardsByKey = remember(cards) { cards.associateBy(key) }
 
-    val deck = remember { DeckState() }
+    val deck = remember { DeckState(cardGeometry) }
     deck.maxVisibleCards = maxVisibleCards
     deck.maxRotationY = maxRotationY
     deck.swipeThresholdFraction = swipeThresholdFraction
@@ -95,6 +134,7 @@ fun <T> SwipingCards(
         val cardWidth = maxWidth
         val cardHeight = maxHeight
         with(LocalDensity.current) {
+            deck.density = density
             deck.containerWidthPx = constraints.maxWidth.toFloat()
             deck.cardWidthPx = cardWidth.toPx()
             deck.cardHeightPx = cardHeight.toPx()
@@ -209,7 +249,7 @@ private fun <T> SwipingCardsScope.SwipingCard(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val animState = deck.getOrCreateCardAnimState(cardKey, stackPosition)
-    val positionConfig = stackPositionConfig(stackPosition)
+    val positionConfig = deck.configForPosition(stackPosition)
     val card = cardsByKey.getValue(cardKey)
 
     // The drag gesture below is a long-lived pointerInput(Unit) that must never
