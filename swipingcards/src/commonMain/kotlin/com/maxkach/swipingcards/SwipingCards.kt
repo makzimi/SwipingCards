@@ -25,13 +25,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sqrt
 
 private const val FLING_VELOCITY = 2000f
 private const val CAMERA_DISTANCE = 12f
-private const val DEG_TO_RAD = PI / 180.0
 
 private interface SwipingCardsScope {
     val cardWidth: Dp
@@ -222,15 +220,8 @@ private fun <T> SwipingCardsScope.ExitingCard(
                 rotationZ = animState.rotationZ.value
                 this.alpha = animState.alpha.value
 
-                val bottomAlignY = bottomAlignmentOffsetY(
-                    scale = animState.scale.value,
-                    rotationZRad = abs(animState.rotationZ.value) * DEG_TO_RAD,
-                    cardWidthPx = cardWidth.toPx(),
-                    cardHeightPx = cardHeight.toPx(),
-                )
-
                 translationX = animState.translationXDp.value * density
-                translationY = bottomAlignY + animState.translationYDp.value * density
+                translationY = animState.translationYDp.value * density
             },
     ) {
         cardContent(card)
@@ -270,18 +261,10 @@ private fun <T> SwipingCardsScope.SwipingCard(
                 rotationZ = animState.rotationZ.value
                 this.alpha = animState.alpha.value
 
-                val bottomAlignY = bottomAlignmentOffsetY(
-                    scale = animState.scale.value,
-                    rotationZRad = abs(animState.rotationZ.value) * DEG_TO_RAD,
-                    cardWidthPx = cardWidth.toPx(),
-                    cardHeightPx = cardHeight.toPx(),
-                )
-
                 translationX = animState.translationXDp.value * density +
                     if (stackPosition == 0) deck.dragOffsetX.value
                     else deck.backgroundRepulsionX * positionConfig.repulsionFactor
-                translationY = bottomAlignY +
-                    animState.translationYDp.value * density +
+                translationY = animState.translationYDp.value * density +
                     if (stackPosition == 0) deck.dragOffsetY.value
                     else deck.backgroundRepulsionY * positionConfig.repulsionFactor
             }

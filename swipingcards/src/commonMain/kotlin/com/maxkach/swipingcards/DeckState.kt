@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.CoroutineScope
@@ -180,7 +181,14 @@ internal class DeckState(
         idleTranslationXPx(position, config.scale, config.rotationZ, cardWidthPx) / density +
             config.offsetX.value
 
-    private fun idleYDp(config: StackPositionConfig): Float = config.offsetY.value
+    // Resolve bottom alignment at rest: abs(animated rotation) would kink Y at every zero crossing.
+    private fun idleYDp(config: StackPositionConfig): Float =
+        bottomAlignmentOffsetY(
+            scale = config.scale,
+            rotationZRad = abs(config.rotationZ) * DEG_TO_RAD,
+            cardWidthPx = cardWidthPx,
+            cardHeightPx = cardHeightPx,
+        ) / density + config.offsetY.value
 
     fun getOrCreateCardAnimState(key: Any, stackPosition: Int): CardAnimState =
         cardAnimStates.getOrPut(key) {
@@ -349,6 +357,13 @@ internal class DeckState(
             stiffness = PROMOTE_SPRING_STIFFNESS,
         )
 
+        // A 0.01 scale threshold can finish before the first rebound on a small scale change.
+        val promoteScaleSpring = spring<Float>(
+            dampingRatio = PROMOTE_SPRING_DAMPING,
+            stiffness = PROMOTE_SPRING_STIFFNESS,
+            visibilityThreshold = 0.0001f,
+        )
+
         // The exiting card sinks toward the rear and fades — in its own scope, touching
         // only its own animatables, so a rapid follow-up swipe can't cancel it. The
         // finally clause always drops the layer, even if a reclaim supersedes it.
@@ -358,7 +373,7 @@ internal class DeckState(
                     val exitConfig = configForPosition(promoteCount)
                     val exitXDp = idleXDp(promoteCount, exitConfig)
                     coroutineScope {
-                        launch { dismissedState.scale.animateTo(exitConfig.scale, promoteSpring) }
+                        launch { dismissedState.scale.animateTo(exitConfig.scale, promoteScaleSpring) }
                         launch { dismissedState.rotationZ.animateTo(exitConfig.rotationZ, promoteSpring) }
                         launch { dismissedState.translationXDp.animateTo(exitXDp, promoteSpring) }
                         launch { dismissedState.translationYDp.animateTo(idleYDp(exitConfig), promoteSpring) }
@@ -380,7 +395,7 @@ internal class DeckState(
                     val state = cardAnimStates[cardKey] ?: continue
                     val config = configForPosition(newPos)
                     val targetXDp = idleXDp(newPos, config)
-                    launch { state.scale.animateTo(config.scale, promoteSpring) }
+                    launch { state.scale.animateTo(config.scale, promoteScaleSpring) }
                     launch { state.rotationZ.animateTo(config.rotationZ, promoteSpring) }
                     launch { state.translationXDp.animateTo(targetXDp, promoteSpring) }
                     launch { state.translationYDp.animateTo(idleYDp(config), promoteSpring) }
