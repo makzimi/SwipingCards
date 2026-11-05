@@ -9,6 +9,8 @@ import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -48,7 +50,11 @@ class StackGeometryTest {
                 idleTranslationXPx(position, original.scale, original.rotationZ, deck.cardWidthPx),
                 state.translationXDp.value * deck.density,
             )
-            assertEquals(0f, state.translationYDp.value * deck.density)
+            assertEquals(
+                bottomAlignmentOffsetY(original.scale, abs(original.rotationZ) * PI / 180.0,
+                    deck.cardWidthPx, deck.cardHeightPx),
+                state.translationYDp.value * deck.density,
+            )
         }
     }
 
@@ -63,9 +69,7 @@ class StackGeometryTest {
         }
         val state = deck.getOrCreateCardAnimState("rear", 1)
         assertEquals(-74f, state.translationXDp.value * deck.density) // -50 px alignment, -24 px offset
-        assertEquals(-40f, state.translationYDp.value * deck.density)
-        val renderedY = bottomAlignmentOffsetY(0.5f, 0.0, 200f, 300f) + state.translationYDp.value * deck.density
-        assertEquals(35f, renderedY) // 75 px alignment, -40 px offset
+        assertEquals(35f, state.translationYDp.value * deck.density) // 75 px alignment, -40 px offset
     }
 
     @Test
@@ -145,6 +149,46 @@ class StackGeometryTest {
         assertRestingGeometry(deck)
     }
 
+    @Test
+    fun equalHeightRearCards_doNotBobWhenRotationCrossesZero() = runTest {
+        val deck = deckWithCards(listOf("A", "B", "C"), geometry = { position ->
+            when (position) {
+                1 -> StackCardGeometry(0.857f, -10f, (-21).dp, (-41).dp)
+                2 -> StackCardGeometry(0.857f, 10f, 7.dp, (-41).dp)
+                else -> SwipingCardsDefaults.cardGeometry(position)
+            }
+        })
+        val rear = assertNotNull(deck.animStateOf("C"))
+        val initialY = rear.translationYDp.value
+        val samples = mutableListOf<Pair<Float, Float>>()
+        deck.dragOffsetX.snapTo(80f)
+
+        withContext(TestFrameClock(testScheduler) {
+            samples += rear.rotationZ.value to rear.translationYDp.value
+        }) {
+            deck.performDismiss("A", this) {}
+        }
+
+        assertTrue(samples.any { (rotation, _) -> rotation > 0f })
+        assertTrue(samples.any { (rotation, _) -> rotation < 0f })
+        samples.forEach { (_, y) -> assertEquals(initialY, y, 0.0001f) }
+    }
+
+    @Test
+    fun promotedCard_keepsSmallScaleReboundInsteadOfSnappingEarly() = runTest {
+        val deck = deckWithCards(listOf("A", "B", "C"), geometry = ::customGeometry)
+        val promoted = assertNotNull(deck.animStateOf("B"))
+        val scales = mutableListOf<Float>()
+        deck.dragOffsetX.snapTo(80f)
+
+        withContext(TestFrameClock(testScheduler) { scales += promoted.scale.value }) {
+            deck.performDismiss("A", this) {}
+        }
+
+        assertTrue(scales.any { it > 1.002f }, "The scale spring should retain its first rebound")
+        assertEquals(1f, promoted.scale.value)
+    }
+
     private fun customGeometry(position: Int): StackCardGeometry = when (position) {
         0 -> StackCardGeometry(offsetX = 3.dp, offsetY = 5.dp)
         1 -> StackCardGeometry(0.86f, -10f, (-16).dp, (-40).dp)
@@ -192,13 +236,21 @@ class StackGeometryTest {
             state.translationXDp.value * deck.density,
             0.0001f,
         )
-        assertEquals(geometry.offsetY.value * deck.density, state.translationYDp.value * deck.density, 0.0001f)
+        assertEquals(
+            bottomAlignmentOffsetY(geometry.scale, abs(geometry.rotationZ) * PI / 180.0,
+                deck.cardWidthPx, deck.cardHeightPx) + geometry.offsetY.value * deck.density,
+            state.translationYDp.value * deck.density,
+            0.0001f,
+        )
     }
 
-    private class TestFrameClock(private val scheduler: TestCoroutineScheduler) : MonotonicFrameClock {
+    private class TestFrameClock(
+        private val scheduler: TestCoroutineScheduler,
+        private val captureFrame: () -> Unit = {},
+    ) : MonotonicFrameClock {
         override suspend fun <R> withFrameNanos(onFrame: (Long) -> R): R {
             delay(16)
-            return onFrame(scheduler.currentTime * 1_000_000L)
+            return onFrame(scheduler.currentTime * 1_000_000L).also { captureFrame() }
         }
     }
 }
