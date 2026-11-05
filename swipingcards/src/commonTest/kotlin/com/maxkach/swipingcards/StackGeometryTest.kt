@@ -46,9 +46,9 @@ class StackGeometryTest {
             assertEquals(original.alpha, state.alpha.value)
             assertEquals(
                 idleTranslationXPx(position, original.scale, original.rotationZ, deck.cardWidthPx),
-                state.translationX.value,
+                state.translationXDp.value * deck.density,
             )
-            assertEquals(0f, state.translationY.value)
+            assertEquals(0f, state.translationYDp.value * deck.density)
         }
     }
 
@@ -62,9 +62,9 @@ class StackGeometryTest {
             cardHeightPx = 300f
         }
         val state = deck.getOrCreateCardAnimState("rear", 1)
-        assertEquals(-74f, state.translationX.value) // -50 px alignment, -24 px offset
-        assertEquals(-40f, state.translationY.value)
-        val renderedY = bottomAlignmentOffsetY(0.5f, 0.0, 200f, 300f) + state.translationY.value
+        assertEquals(-74f, state.translationXDp.value * deck.density) // -50 px alignment, -24 px offset
+        assertEquals(-40f, state.translationYDp.value * deck.density)
+        val renderedY = bottomAlignmentOffsetY(0.5f, 0.0, 200f, 300f) + state.translationYDp.value * deck.density
         assertEquals(35f, renderedY) // 75 px alignment, -40 px offset
     }
 
@@ -189,10 +189,10 @@ class StackGeometryTest {
         assertEquals(
             idleTranslationXPx(position, geometry.scale, geometry.rotationZ, deck.cardWidthPx) +
                 geometry.offsetX.value * deck.density,
-            state.translationX.value,
+            state.translationXDp.value * deck.density,
             0.0001f,
         )
-        assertEquals(geometry.offsetY.value * deck.density, state.translationY.value, 0.0001f)
+        assertEquals(geometry.offsetY.value * deck.density, state.translationYDp.value * deck.density, 0.0001f)
     }
 
     private class TestFrameClock(private val scheduler: TestCoroutineScheduler) : MonotonicFrameClock {

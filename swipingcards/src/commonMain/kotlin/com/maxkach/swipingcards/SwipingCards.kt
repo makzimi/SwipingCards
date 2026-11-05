@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
@@ -228,8 +229,8 @@ private fun <T> SwipingCardsScope.ExitingCard(
                     cardHeightPx = cardHeight.toPx(),
                 )
 
-                translationX = animState.translationX.value
-                translationY = bottomAlignY + animState.translationY.value
+                translationX = animState.translationXDp.value * density
+                translationY = bottomAlignY + animState.translationYDp.value * density
             },
     ) {
         cardContent(card)
@@ -255,6 +256,7 @@ private fun <T> SwipingCardsScope.SwipingCard(
     // The drag gesture below is a long-lived pointerInput(Unit) that must never
     // restart, so its closures cannot capture cardsByKey/onSwipe by value — they'd
     // go stale after an external cards update. rememberUpdatedState keeps them fresh.
+    val latestAnimState = rememberUpdatedState(animState)
     val latestCardsByKey = rememberUpdatedState(cardsByKey)
     val latestOnSwipe = rememberUpdatedState(onSwipe)
 
@@ -275,15 +277,16 @@ private fun <T> SwipingCardsScope.SwipingCard(
                     cardHeightPx = cardHeight.toPx(),
                 )
 
-                translationX = animState.translationX.value +
+                translationX = animState.translationXDp.value * density +
                     if (stackPosition == 0) deck.dragOffsetX.value
                     else deck.backgroundRepulsionX * positionConfig.repulsionFactor
                 translationY = bottomAlignY +
-                    animState.translationY.value +
+                    animState.translationYDp.value * density +
                     if (stackPosition == 0) deck.dragOffsetY.value
                     else deck.backgroundRepulsionY * positionConfig.repulsionFactor
             }
             .conditionalDragGesture(
+                animState = latestAnimState,
                 deck = deck,
                 cardsByKey = latestCardsByKey,
                 hapticFeedback = hapticFeedback,
@@ -297,6 +300,7 @@ private fun <T> SwipingCardsScope.SwipingCard(
 }
 
 private fun <T> Modifier.conditionalDragGesture(
+    animState: State<CardAnimState>,
     deck: DeckState,
     cardsByKey: State<Map<Any, T>>,
     hapticFeedback: HapticFeedback,
@@ -306,6 +310,7 @@ private fun <T> Modifier.conditionalDragGesture(
 ): Modifier = then(
     if (needToDrag()) {
         Modifier.cardDragGesture(
+            animState = animState,
             deck = deck,
             cardsByKey = cardsByKey,
             hapticFeedback = hapticFeedback,
@@ -318,6 +323,7 @@ private fun <T> Modifier.conditionalDragGesture(
 )
 
 private fun <T> Modifier.cardDragGesture(
+    animState: State<CardAnimState>,
     deck: DeckState,
     cardsByKey: State<Map<Any, T>>,
     hapticFeedback: HapticFeedback,
@@ -326,24 +332,28 @@ private fun <T> Modifier.cardDragGesture(
 ): Modifier = pointerInput(Unit) {
     val velocityTracker = VelocityTracker()
     var gestureBlocked = false
+    var gesturePosition = Offset.Zero
 
     detectDragGestures(
         onDragStart = {
             gestureBlocked = deck.isAnimating
             if (!gestureBlocked) {
                 velocityTracker.resetTracking()
+                gesturePosition = Offset.Zero
                 deck.hasPassedThreshold = false
             }
         },
         onDrag = { change, dragAmount ->
             if (gestureBlocked) return@detectDragGestures
             change.consume()
-            velocityTracker.addPosition(change.uptimeMillis, change.position)
+            val deckDragAmount = animState.value.toDeckOffset(dragAmount)
+            gesturePosition += deckDragAmount
+            velocityTracker.addPosition(change.uptimeMillis, gesturePosition)
             coroutineScope.launch {
-                deck.dragOffsetX.snapTo(deck.dragOffsetX.value + dragAmount.x)
+                deck.dragOffsetX.snapTo(deck.dragOffsetX.value + deckDragAmount.x)
             }
             coroutineScope.launch {
-                deck.dragOffsetY.snapTo(deck.dragOffsetY.value + dragAmount.y)
+                deck.dragOffsetY.snapTo(deck.dragOffsetY.value + deckDragAmount.y)
             }
             val threshold = deck.containerWidthPx * deck.swipeThresholdFraction
             val distanceFromCenter = sqrt(
