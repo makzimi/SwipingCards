@@ -1,6 +1,7 @@
 package com.maxkach.swipingcards
 
 import androidx.compose.runtime.MonotonicFrameClock
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,12 +50,12 @@ class StackGeometryTest {
             assertEquals(original.alpha, state.alpha.value)
             assertEquals(
                 idleTranslationXPx(position, original.scale, original.rotationZ, deck.cardWidthPx),
-                state.translationXDp.value * deck.density,
+                renderedTranslation(deck, state).x,
             )
             assertEquals(
                 bottomAlignmentOffsetY(original.scale, abs(original.rotationZ) * PI / 180.0,
                     deck.cardWidthPx, deck.cardHeightPx),
-                state.translationYDp.value * deck.density,
+                renderedTranslation(deck, state).y,
             )
         }
     }
@@ -68,8 +70,102 @@ class StackGeometryTest {
             cardHeightPx = 300f
         }
         val state = deck.getOrCreateCardAnimState("rear", 1)
-        assertEquals(-74f, state.translationXDp.value * deck.density) // -50 px alignment, -24 px offset
-        assertEquals(35f, state.translationYDp.value * deck.density) // 75 px alignment, -40 px offset
+        assertEquals(-74f, renderedTranslation(deck, state).x) // -50 px alignment, -24 px offset
+        assertEquals(35f, renderedTranslation(deck, state).y) // 75 px alignment, -40 px offset
+    }
+
+    @Test
+    fun heightChange_updatesExistingCardAlignmentWithoutASwipe() = runTest {
+        val deck = DeckState { StackCardGeometry(scale = 0.5f) }.apply {
+            density = 1f
+            cardWidthPx = 200f
+            cardHeightPx = 300f
+            reconcile(listOf("front", "rear"))
+        }
+        val rear = deck.getOrCreateCardAnimState("rear", 1)
+        assertEquals(75f, renderedTranslation(deck, rear).y)
+
+        deck.cardHeightPx = 600f
+        withContext(TestFrameClock(testScheduler)) { deck.updateLayoutTargets() }
+
+        assertSame(rear, deck.getOrCreateCardAnimState("rear", 1))
+        assertEquals(listOf<Any>("front", "rear"), deck.internalOrder)
+        assertEquals(150f, renderedTranslation(deck, rear).y)
+    }
+
+    @Test
+    fun sizeAndDensityChanges_keepRotatedAlignmentAndDpOffsets() = runTest {
+        val deck = DeckState {
+            StackCardGeometry(scale = 0.5f, rotationZ = 90f, offsetX = (-12).dp, offsetY = (-20).dp)
+        }.apply {
+            density = 2f
+            cardWidthPx = 200f
+            cardHeightPx = 300f
+            reconcile(listOf("front", "rear"))
+        }
+        val rear = deck.getOrCreateCardAnimState("rear", 1)
+        assertEquals(-124f, renderedTranslation(deck, rear).x, 0.0001f)
+        assertEquals(60f, renderedTranslation(deck, rear).y, 0.0001f)
+
+        deck.cardWidthPx = 400f
+        withContext(TestFrameClock(testScheduler)) { deck.updateLayoutTargets() }
+        assertEquals(-224f, renderedTranslation(deck, rear).x, 0.0001f)
+        assertEquals(10f, renderedTranslation(deck, rear).y, 0.0001f)
+
+        deck.cardHeightPx = 600f
+        deck.density = 3f
+        withContext(TestFrameClock(testScheduler)) { deck.updateLayoutTargets() }
+        assertSame(rear, deck.getOrCreateCardAnimState("rear", 1))
+        assertEquals(-236f, renderedTranslation(deck, rear).x, 0.0001f)
+        assertEquals(140f, renderedTranslation(deck, rear).y, 0.0001f)
+    }
+
+    @Test
+    fun firstMeasurement_updatesStateCreatedAtZeroSize() = runTest {
+        val deck = DeckState { StackCardGeometry(scale = 0.5f) }
+        deck.reconcile(listOf("front", "rear"))
+        val rear = deck.getOrCreateCardAnimState("rear", 1)
+        assertEquals(Offset.Zero, renderedTranslation(deck, rear))
+
+        deck.cardWidthPx = 200f
+        deck.cardHeightPx = 300f
+        withContext(TestFrameClock(testScheduler)) { deck.updateLayoutTargets() }
+
+        assertSame(rear, deck.getOrCreateCardAnimState("rear", 1))
+        assertEquals(Offset(-50f, 75f), renderedTranslation(deck, rear))
+    }
+
+    @Test
+    fun resizeDuringPromotion_updatesVisibleAndExitingCardsWithoutRestartingSwipe() = runTest {
+        val deck = deckWithCards(listOf("A", "B", "C", "D", "E"), geometry = ::customGeometry)
+        val dismissed = assertNotNull(deck.animStateOf("A"))
+        var callbacks = 0
+        deck.dragOffsetX.snapTo(80f)
+        deck.dragOffsetY.snapTo(-25f)
+
+        withContext(TestFrameClock(testScheduler)) {
+            deck.performDismiss("A", this) { callbacks++ }
+            delay(96)
+            assertTrue("A" in deck.exitingKeys)
+            val keys = deck.internalOrder.take(deck.visibleCount) + deck.exitingKeys
+            assertTrue("D" in keys)
+            val states = keys.associateWith { assertNotNull(deck.animStateOf(it)) }
+
+            deck.cardWidthPx *= 2f
+            deck.updateLayoutTargets()
+            delay(48)
+            deck.cardHeightPx *= 2f
+            deck.updateLayoutTargets()
+
+            states.forEach { (key, state) -> assertSame(state, deck.animStateOf(key)) }
+        }
+
+        assertEquals(1, callbacks)
+        assertEquals(listOf<Any>("B", "C", "D", "E", "A"), deck.internalOrder)
+        assertRestingGeometry(deck)
+        assertAtPosition(deck, dismissed, 3)
+        assertNull(deck.animStateOf("A"))
+        assertTrue(deck.exitingKeys.isEmpty())
     }
 
     @Test
@@ -159,12 +255,12 @@ class StackGeometryTest {
             }
         })
         val rear = assertNotNull(deck.animStateOf("C"))
-        val initialY = rear.translationYDp.value
+        val initialY = renderedTranslation(deck, rear).y
         val samples = mutableListOf<Pair<Float, Float>>()
         deck.dragOffsetX.snapTo(80f)
 
         withContext(TestFrameClock(testScheduler) {
-            samples += rear.rotationZ.value to rear.translationYDp.value
+            samples += rear.rotationZ.value to renderedTranslation(deck, rear).y
         }) {
             deck.performDismiss("A", this) {}
         }
@@ -233,16 +329,19 @@ class StackGeometryTest {
         assertEquals(
             idleTranslationXPx(position, geometry.scale, geometry.rotationZ, deck.cardWidthPx) +
                 geometry.offsetX.value * deck.density,
-            state.translationXDp.value * deck.density,
+            renderedTranslation(deck, state).x,
             0.0001f,
         )
         assertEquals(
             bottomAlignmentOffsetY(geometry.scale, abs(geometry.rotationZ) * PI / 180.0,
                 deck.cardWidthPx, deck.cardHeightPx) + geometry.offsetY.value * deck.density,
-            state.translationYDp.value * deck.density,
+            renderedTranslation(deck, state).y,
             0.0001f,
         )
     }
+
+    private fun renderedTranslation(deck: DeckState, state: CardAnimState): Offset =
+        state.renderedTranslation(deck.density)
 
     private class TestFrameClock(
         private val scheduler: TestCoroutineScheduler,

@@ -17,6 +17,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 private const val BACKGROUND_VERTICAL_REPULSION_FACTOR = 0.35f
@@ -94,6 +95,13 @@ internal class CardAnimState(config: StackPositionConfig, initialXDp: Float, ini
     val translationXDp = Animatable(initialXDp)
     val translationYDp = Animatable(initialYDp)
     val alpha = Animatable(config.alpha)
+    // Resize retargets join the original scope so exiting cards wait for them before removal.
+    var translationScope: CoroutineScope? = null
+
+    fun renderedTranslation(density: Float): Offset = Offset(
+        translationXDp.value * density,
+        translationYDp.value * density,
+    )
 
     // Pointer deltas are local to the scaled/rotated card; translations use deck axes.
     fun toDeckOffset(offset: Offset): Offset {
@@ -196,6 +204,30 @@ internal class DeckState(
             val xDp = idleXDp(stackPosition, config)
             CardAnimState(config, xDp, idleYDp(config))
         }
+
+    suspend fun updateLayoutTargets() = coroutineScope {
+        internalOrder.take(visibleCount).forEachIndexed { position, key ->
+            val state = cardAnimStates[key] ?: return@forEachIndexed
+            animateTranslation(state, position, state.translationScope?.takeIf { it.isActive } ?: this)
+        }
+        exitingKeys.forEach { key ->
+            val state = cardAnimStates[key] ?: return@forEach
+            animateTranslation(state, visibleCount, state.translationScope?.takeIf { it.isActive } ?: this)
+        }
+    }
+
+    private fun animateTranslation(state: CardAnimState, position: Int, scope: CoroutineScope) {
+        val config = configForPosition(position)
+        val targetXDp = idleXDp(position, config)
+        val targetYDp = idleYDp(config)
+        val spec = spring<Float>(
+            dampingRatio = PROMOTE_SPRING_DAMPING,
+            stiffness = PROMOTE_SPRING_STIFFNESS,
+        )
+        state.translationScope = scope
+        scope.launch { state.translationXDp.animateTo(targetXDp, spec) }
+        scope.launch { state.translationYDp.animateTo(targetYDp, spec) }
+    }
 
     /** Animation state for a card currently rendered as an exiting layer, or null. */
     fun animStateOf(key: Any): CardAnimState? = cardAnimStates[key]
@@ -371,12 +403,10 @@ internal class DeckState(
             coroutineScope.launch {
                 try {
                     val exitConfig = configForPosition(promoteCount)
-                    val exitXDp = idleXDp(promoteCount, exitConfig)
                     coroutineScope {
                         launch { dismissedState.scale.animateTo(exitConfig.scale, promoteScaleSpring) }
                         launch { dismissedState.rotationZ.animateTo(exitConfig.rotationZ, promoteSpring) }
-                        launch { dismissedState.translationXDp.animateTo(exitXDp, promoteSpring) }
-                        launch { dismissedState.translationYDp.animateTo(idleYDp(exitConfig), promoteSpring) }
+                        animateTranslation(dismissedState, promoteCount, this)
                         launch { dismissedState.alpha.animateTo(0f, promoteSpring) }
                     }
                 } finally {
@@ -394,11 +424,9 @@ internal class DeckState(
                 for ((newPos, cardKey) in visibleKeys.withIndex()) {
                     val state = cardAnimStates[cardKey] ?: continue
                     val config = configForPosition(newPos)
-                    val targetXDp = idleXDp(newPos, config)
                     launch { state.scale.animateTo(config.scale, promoteScaleSpring) }
                     launch { state.rotationZ.animateTo(config.rotationZ, promoteSpring) }
-                    launch { state.translationXDp.animateTo(targetXDp, promoteSpring) }
-                    launch { state.translationYDp.animateTo(idleYDp(config), promoteSpring) }
+                    animateTranslation(state, newPos, this)
                     launch { state.alpha.animateTo(config.alpha, promoteSpring) }
                 }
             }
