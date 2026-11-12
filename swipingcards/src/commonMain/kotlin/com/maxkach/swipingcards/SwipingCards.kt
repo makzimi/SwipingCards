@@ -14,6 +14,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
@@ -55,6 +56,13 @@ private class SwipingCardsScopeImpl(
  * @param key stable identity for each card; must be unique within [cards].
  * @param maxVisibleCards maximum cards rendered at once (must be >= 1; default 4).
  * @param onSwipe invoked exactly once when a swipe crosses the threshold.
+ * @param isSwipeEnabled whether drag gestures are enabled. Disabling during a drag cancels it
+ * and returns the card to rest; it does not disable clicks inside [cardContent].
+ * @param cardLayer drawing callback applied after the deck's per-card transforms, including
+ * exiting cards. Read animation state here; own its timing and lifecycle in the caller.
+ * This callback cannot change layout, stacking order, semantics, or the deck's gesture math.
+ * Disable swipes while overriding the front card's scale or rotation. An unchanged callback
+ * preserves the deck's transforms. Do not launch effects or mutate state from this callback.
  * @param cardContent renders a single card.
  */
 @Composable
@@ -66,6 +74,8 @@ fun <T> SwipingCards(
     maxRotationY: Float = 38f,
     swipeThresholdFraction: Float = 0.20f,
     onSwipe: (SwipeResult<T>) -> Unit = {},
+    isSwipeEnabled: Boolean = true,
+    cardLayer: GraphicsLayerScope.(CardInfo) -> Unit = {},
     cardContent: @Composable (T) -> Unit,
 ) {
     SwipingCards(
@@ -77,6 +87,8 @@ fun <T> SwipingCards(
         maxRotationY = maxRotationY,
         swipeThresholdFraction = swipeThresholdFraction,
         onSwipe = onSwipe,
+        isSwipeEnabled = isSwipeEnabled,
+        cardLayer = cardLayer,
         cardContent = cardContent,
     )
 }
@@ -105,6 +117,8 @@ fun <T> SwipingCards(
     maxRotationY: Float = 38f,
     swipeThresholdFraction: Float = 0.20f,
     onSwipe: (SwipeResult<T>) -> Unit = {},
+    isSwipeEnabled: Boolean = true,
+    cardLayer: GraphicsLayerScope.(CardInfo) -> Unit = {},
     cardContent: @Composable (T) -> Unit,
 ) {
     require(maxVisibleCards >= 1) {
@@ -153,6 +167,8 @@ fun <T> SwipingCards(
                 deck = deck,
                 cardsByKey = cardsByKey,
                 onSwipe = onSwipe,
+                isSwipeEnabled = isSwipeEnabled,
+                cardLayer = cardLayer,
                 cardContent = cardContent,
             )
         }
@@ -165,6 +181,8 @@ private fun <T> SwipingCardsScope.RotationContainer(
     cardsByKey: Map<Any, T>,
     modifier: Modifier = Modifier,
     onSwipe: (SwipeResult<T>) -> Unit,
+    isSwipeEnabled: Boolean,
+    cardLayer: GraphicsLayerScope.(CardInfo) -> Unit,
     cardContent: @Composable (T) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -184,7 +202,13 @@ private fun <T> SwipingCardsScope.RotationContainer(
         deck.exitingKeys.forEach { exitKey ->
             val card = cardsByKey[exitKey] ?: return@forEach
             key(exitKey) {
-                ExitingCard(deck = deck, cardKey = exitKey, card = card, cardContent = cardContent)
+                ExitingCard(
+                    deck = deck,
+                    cardKey = exitKey,
+                    card = card,
+                    cardLayer = cardLayer,
+                    cardContent = cardContent,
+                )
             }
         }
 
@@ -199,6 +223,8 @@ private fun <T> SwipingCardsScope.RotationContainer(
                     cardsByKey = cardsByKey,
                     coroutineScope = coroutineScope,
                     onSwipe = onSwipe,
+                    isSwipeEnabled = isSwipeEnabled,
+                    cardLayer = cardLayer,
                     cardContent = cardContent,
                 )
             }
@@ -211,9 +237,11 @@ private fun <T> SwipingCardsScope.ExitingCard(
     deck: DeckState,
     cardKey: Any,
     card: T,
+    cardLayer: GraphicsLayerScope.(CardInfo) -> Unit,
     cardContent: @Composable (T) -> Unit,
 ) {
     val animState = deck.animStateOf(cardKey) ?: return
+    val info = remember(cardKey) { CardInfo(key = cardKey, position = null) }
 
     Box(
         modifier = Modifier
@@ -228,6 +256,7 @@ private fun <T> SwipingCardsScope.ExitingCard(
                 val translation = animState.renderedTranslation(density)
                 translationX = translation.x
                 translationY = translation.y
+                cardLayer(info)
             },
     ) {
         cardContent(card)
@@ -243,12 +272,15 @@ private fun <T> SwipingCardsScope.SwipingCard(
     coroutineScope: CoroutineScope,
     modifier: Modifier = Modifier,
     onSwipe: (SwipeResult<T>) -> Unit,
+    isSwipeEnabled: Boolean,
+    cardLayer: GraphicsLayerScope.(CardInfo) -> Unit,
     cardContent: @Composable (T) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val animState = deck.getOrCreateCardAnimState(cardKey, stackPosition)
     val positionConfig = deck.configForPosition(stackPosition)
     val card = cardsByKey.getValue(cardKey)
+    val info = remember(cardKey, stackPosition) { CardInfo(key = cardKey, position = stackPosition) }
 
     // The drag gesture below is a long-lived pointerInput(Unit) that must never
     // restart, so its closures cannot capture cardsByKey/onSwipe by value — they'd
@@ -274,6 +306,7 @@ private fun <T> SwipingCardsScope.SwipingCard(
                 translationY = translation.y +
                     if (stackPosition == 0) deck.dragOffsetY.value
                     else deck.backgroundRepulsionY * positionConfig.repulsionFactor
+                cardLayer(info)
             }
             .conditionalDragGesture(
                 animState = latestAnimState,
@@ -281,7 +314,7 @@ private fun <T> SwipingCardsScope.SwipingCard(
                 cardsByKey = latestCardsByKey,
                 hapticFeedback = hapticFeedback,
                 coroutineScope = coroutineScope,
-                needToDrag = { stackPosition == 0 },
+                needToDrag = { stackPosition == 0 && isSwipeEnabled },
                 onSwipe = latestOnSwipe,
             ),
     ) {

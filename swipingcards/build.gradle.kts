@@ -23,6 +23,12 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.kotlinx.coroutines.core)
         }
+        androidUnitTest.dependencies {
+            implementation(libs.junit)
+            implementation("org.robolectric:robolectric:4.17")
+            implementation("androidx.compose.ui:ui-test-junit4:1.9.0")
+            implementation("androidx.compose.ui:ui-test-manifest:1.9.0")
+        }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
@@ -36,6 +42,7 @@ android {
     defaultConfig {
         minSdk = 26
     }
+    testOptions.unitTests.isIncludeAndroidResources = true
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
